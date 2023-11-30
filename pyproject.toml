@@ -20,7 +20,17 @@ urls.Source = "https://github.com/ChanghaoGong/STutils"
 urls.Home-page = "https://github.com/ChanghaoGong/STutils"
 dependencies = [
     "anndata",
-    # for debug logging (referenced from the issue template)
+    "scanpy",
+    "matplotlib",
+    "seaborn",
+    "numpy",
+    "pandas",
+    "opencv-python",
+    "scikit-learn",
+    "typing",
+    "matplotlib_scalebar",
+    "ctxcore",
+    "tqdm",
     "session-info"
 ]
 

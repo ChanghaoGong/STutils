@@ -14,7 +14,7 @@ from anndata import AnnData
 from matplotlib.axes import Axes
 from matplotlib_scalebar.scalebar import ScaleBar
 
-from .utils import getDefaultColors, hex_to_rgb, int_to_rgb_idx
+from ._utils import getDefaultColors, hex_to_rgb, int_to_rgb_idx
 
 
 def cell_bin_plot(mask: str, res: pd.DataFrame, tag: str, colors: Sequence) -> np.ndarray:
