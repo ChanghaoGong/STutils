@@ -1,1 +1,2 @@
-from .basic import basic_tool
+from ._getDEG import getDEG
+from ._removeBiasGenes import removeBiasGenes
