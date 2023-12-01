@@ -5,7 +5,6 @@ from anndata import AnnData
 from sklearn.cluster import BisectingKMeans
 
 
-# 根据分类标签合成大细胞
 def merge_big_cell(
     adata: AnnData,
     resolution: str,
@@ -13,6 +12,19 @@ def merge_big_cell(
     merge_tags: list[str],
     n: int = 30,
 ) -> AnnData:
+    """Merge STomics cellbin data to metacell by axis and celltype.
+
+    Args:
+        adata (AnnData): adata object
+        resolution (str): celltype
+        prefix (str): prefix of output file
+        merge_tags (list[str]): tags to merge
+        n (int, optional): cell numbers to merge. Defaults to 30.
+
+    Returns
+    -------
+        AnnData: merged adata object with resulution and merge_tags.
+    """
     adata_list = []
     for category in adata.obs[resolution].unique():
         sub_adata = adata[adata.obs[resolution] == category].copy()

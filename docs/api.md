@@ -9,7 +9,7 @@
 .. autosummary::
     :toctree: generated
 
-    pp.basic_preproc
+    pp.merge_big_cell
 ```
 
 ## Tools
@@ -21,7 +21,9 @@
 .. autosummary::
     :toctree: generated
 
-    tl.basic_tool
+    tl.aucell
+    tl.getDEG
+    tl.removeBiasGenes
 ```
 
 ## Plotting
@@ -33,6 +35,7 @@
 .. autosummary::
     :toctree: generated
 
-    pl.basic_plot
-    pl.BasicClass
+    pl.plot_cellbin_gradient
+    pl.plot_cellbin_discrete
+    pl.getDefaultColors
 ```

@@ -1,7 +1,5 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
 The format is based on [Keep a Changelog][],
 and this project adheres to [Semantic Versioning][].
 
@@ -12,4 +10,10 @@ and this project adheres to [Semantic Versioning][].
 
 ### Added
 
--   Basic tool, preprocessing and plotting functions
+-   pp.merge_big_cell
+-   tl.aucell
+-   tl.getDEG
+-   tl.removeBiasGenes
+-   pl.plot_cellbin_gradient
+-   pl.plot_cellbin_discrete
+-   pl.getDefaultColors
