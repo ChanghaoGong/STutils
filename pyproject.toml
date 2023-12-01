@@ -29,6 +29,7 @@ dependencies = [
     "scikit-learn",
     "typing",
     "matplotlib_scalebar",
+    "boltons",
     "ctxcore",
     "tqdm",
     "session-info"
