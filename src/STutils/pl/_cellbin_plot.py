@@ -114,7 +114,7 @@ def plot_cellbin_gradient(
     colors = [mcolors.rgb2hex(cmap(norm(value))) for value in clusters]  # get color for each cluster
 
     # plot cellbin gradient image
-    im = cell_bin_plot(adata=adata, mask=mask, res=res, tag=tag, colors=colors)
+    im = cell_bin_plot(mask=mask, res=res, tag=tag, colors=colors)
 
     # cut black edge of im
     non_black_coords = np.argwhere(im.sum(axis=2) > 0)
@@ -203,7 +203,7 @@ def plot_cellbin_discrete(
     """
     res = pd.DataFrame(adata.obs, columns=["x", "y", tag], index=adata.obs.index)
     res = res.sort_values(by=tag)
-    res.to_csv(f"bin1clu_{tag}_{prefix}.txt", sep="\t", index=False)  # write to file
+    # res.to_csv(f"bin1clu_{tag}_{prefix}.txt", sep="\t", index=False)  # write to file
     clusters = res[tag].unique()
     cluster_number = clusters.shape[0]
     colors = getDefaultColors(cluster_number, type=colors)
