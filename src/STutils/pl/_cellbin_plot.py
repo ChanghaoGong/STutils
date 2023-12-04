@@ -84,23 +84,36 @@ def plot_cellbin_gradient(
     ax: Optional[Axes] = None,
     save: bool = True,
 ) -> Axes:
-    """
-    plot_cellbin_gradient
+    """Plot cellbin gradient image
 
-    params:
-        adata: AnnData object
-        mask: mask file path
-        tag: tag name in adata.obs
-        prefix: prefix of output file
-        colors: color palette
-        dpi: dpi of output file
-        edge_cut: pixels to retain in edge cutting
-        add_scale_bar: add scale bar or not
-        background: background color, white or black
-        scale: scale bar length
-        length_fraction: scale bar length fraction
-        ax: matplotlib axes
-        save: save figure or not
+    :param adata: AnnData object
+    :type adata: AnnData
+    :param mask: mask file path
+    :type mask: str
+    :param tag: tag name in adata.obs
+    :type tag: str
+    :param prefix: prefix of output file
+    :type prefix: str
+    :param colors: color palette, defaults to "RdYlBu_r"
+    :type colors: str, optional
+    :param dpi: dpi of output file, defaults to 600
+    :type dpi: float, optional
+    :param edge_cut: pixels to retain in edge cutting, defaults to 300
+    :type edge_cut: float, optional
+    :param add_scale_bar: add scale bar or not, defaults to True
+    :type add_scale_bar: bool, optional
+    :param background: background color, defaults to "white"
+    :type background: Literal[&quot;white&quot;, &quot;black&quot;], optional
+    :param scale: scale bar length, defaults to 0.5
+    :type scale: float, optional
+    :param length_fraction: scale bar length fraction, defaults to 0.25
+    :type length_fraction: float, optional
+    :param ax: matplotlib axes, defaults to None
+    :type ax: Optional[Axes], optional
+    :param save: save figure or not, defaults to True
+    :type save: bool, optional
+    :return: matplotlib axes
+    :rtype: Axes
     """
     res = pd.DataFrame(adata.obs, columns=["x", "y", tag], index=adata.obs.index)
     res = res.sort_values(by=tag)
@@ -183,23 +196,36 @@ def plot_cellbin_discrete(
     ax: Optional[Axes] = None,
     save: bool = True,
 ) -> Axes:
-    """
-    plot_cellbin_discrete
+    """Plot discrete cellbin images.
 
-    params:
-        adata: AnnData object
-        mask: mask file path
-        tag: tag name in adata.obs
-        prefix: prefix of output file
-        colors: color palette in getDefaultcolors
-        dpi: dpi of output file
-        edge_cut: pixels to retain in edge cutting
-        background: background color, white or black
-        add_scale_bar: add scale bar or not
-        scale: scale bar length
-        length_fraction: scale bar length fraction
-        ax: matplotlib axes
-        save: save figure or not
+    :param adata: AnnData object
+    :type adata: AnnData
+    :param mask: mask file path
+    :type mask: str
+    :param tag: tag name in adata.obs
+    :type tag: str
+    :param prefix: prefix of output file
+    :type prefix: str
+    :param colors: color palette in getDefaultcolors, defaults to 9
+    :type colors: Literal, optional
+    :param dpi: dpi of output file, defaults to 600
+    :type dpi: int, optional
+    :param edge_cut: pixels to retain in edge cutting, defaults to 300
+    :type edge_cut: int, optional
+    :param background: background color, white or black, defaults to "white"
+    :type background: Literal[&quot;white&quot;, &quot;black&quot;], optional
+    :param add_scale_bar: add scale bar or not, defaults to True
+    :type add_scale_bar: bool, optional
+    :param scale: scale bar length, defaults to 0.5
+    :type scale: float, optional
+    :param length_fraction: scale bar length fraction, defaults to 0.25
+    :type length_fraction: float, optional
+    :param ax: matplotlib axes, defaults to None
+    :type ax: Optional[Axes], optional
+    :param save: save figure or not, defaults to True
+    :type save: bool, optional
+    :return: matplotlib axes
+    :rtype: Axes
     """
     res = pd.DataFrame(adata.obs, columns=["x", "y", tag], index=adata.obs.index)
     res = res.sort_values(by=tag)

@@ -44,13 +44,12 @@ def int_to_rgb_idx(
 def getDefaultColors(n: int, type: Literal = 1) -> list:
     """A beautiful color series list for sci plotting!
 
-    Args:
-        n (int): number of colors to generate
-        type (Literal, optional): type. Defaults to 1.
-
-    Returns
-    -------
-        List: a color rgb hex list
+    :param n: number of colors to generate
+    :type n: int
+    :param type: type, defaults to 1
+    :type type: Literal, optional
+    :return: a color rgb hex list
+    :rtype: list
     """
     if type == 1:
         colors = [

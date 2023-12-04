@@ -123,6 +123,7 @@ html_theme_options = {
 pygments_style = "default"
 
 nitpick_ignore = [
+    ("py:class", "type")
     # If building the documentation fails because of a missing link that is outside your control,
     # you can add an exception to this list.
     #     ("py:class", "igraph.Graph"),

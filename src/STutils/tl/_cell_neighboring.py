@@ -10,18 +10,20 @@ def nhood_enrichment(
     radius: float = 30,
     cluster_key: str = "region",
 ) -> pd.DataFrame:
-    """Calculate nhood enrichment score.
+    """_summary_
 
-    Args:
-        adata (AnnData): spatial anndata
-        coord_type (str, optional): Type of coordinate system. Defaults to 'generic'.
-        library_key (str, optional): batch info. Defaults to 'batch'.
-        radius (int, optional): Compute the graph based on neighborhood radius. Defaults to 30.
-        cluster_key (str, optional): region or cell cluster key. Defaults to "region".
-
-    Returns
-    -------
-        pd.DataFrame: a dataframe of neighborhood enrichment
+    :param adata: spatial anndata
+    :type adata: AnnData
+    :param coord_type: Type of coordinate system., defaults to "generic"
+    :type coord_type: str, optional
+    :param library_key:batch info, defaults to "batch"
+    :type library_key: str, optional
+    :param radius: Compute the graph based on neighborhood radius, defaults to 30
+    :type radius: float, optional
+    :param cluster_key: region or cell cluster key, defaults to "region"
+    :type cluster_key: str, optional
+    :return:a dataframe of neighborhood enrichment
+    :rtype: pd.DataFrame
     """
     sq.gr.spatial_neighbors(adata, coord_type=coord_type, library_key=library_key, radius=radius)
     sq.gr.nhood_enrichment(adata, cluster_key=cluster_key)

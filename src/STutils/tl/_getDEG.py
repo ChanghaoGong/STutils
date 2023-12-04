@@ -18,21 +18,26 @@ def getDEG(
     save: str = "volcano_plot.pdf",
     key_added: str = "rank_genes_groups",
 ) -> dict:
-    """_summary_
+    """Get DEGs for rank_genes_groups
 
-    Args:
-        adata (Anndata): _description_
-        cluster (str): _description_
-        qval_cutoff (float, optional): _description_. Defaults to 0.1.
-        mean_expr_cutoff (float, optional): _description_. Defaults to 0.2.
-        top_genes (int, optional): _description_. Defaults to 200.
-        layer (str, optional): _description_. Defaults to None.
-        save (str, optional): _description_. Defaults to "volcano_plot.pdf".
-        key_added (str, optional): _description_. Defaults to "rank_genes_groups".
-
-    Returns
-    -------
-        dict: _description_
+    :param adata: adata object
+    :type adata: AnnData
+    :param cluster: cluster tag
+    :type cluster: str
+    :param qval_cutoff: qvalue cutoff, defaults to 0.1
+    :type qval_cutoff: float, optional
+    :param mean_expr_cutoff: mean expression cutoff, defaults to 0.2
+    :type mean_expr_cutoff: float, optional
+    :param top_genes:  number of top genes, defaults to 200
+    :type top_genes: int, optional
+    :param layer: adata layers, defaults to None
+    :type layer: str, optional
+    :param save: if or not save volcano plot, defaults to "volcano_plot.pdf"
+    :type save: str, optional
+    :param key_added: DEG key, defaults to "rank_genes_groups"
+    :type key_added: str, optional
+    :return: a DEG dict.
+    :rtype: dict
     """
     # sc.tl.rank_genes_groups(adata, cluster, method='wilcoxon')
     result = adata.uns[key_added]
