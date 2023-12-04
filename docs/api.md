@@ -24,6 +24,7 @@
     tl.aucell
     tl.getDEG
     tl.removeBiasGenes
+    tl.nhood_enrichment
 ```
 
 ## Plotting
@@ -38,4 +39,5 @@
     pl.plot_cellbin_gradient
     pl.plot_cellbin_discrete
     pl.getDefaultColors
+    pl.nhood_heatmap
 ```
