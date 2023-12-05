@@ -18,7 +18,7 @@ sys.path.insert(0, str(HERE / "extensions"))
 
 # NOTE: If you installed your project in editable mode, this might be stale.
 #       If this is the case, reinstall it to refresh the metadata
-info = metadata("STutils")
+info = metadata("StereoUtils")
 project_name = info["Name"]
 author = info["Author"]
 copyright = f"{datetime.now():%Y}, {author}."
@@ -37,7 +37,7 @@ needs_sphinx = "4.0"
 html_context = {
     "display_github": True,  # Integrate GitHub
     "github_user": "ChanghaoGong",  # Username
-    "github_repo": project_name,  # Repo name
+    "github_repo": "STutils",  # Repo name
     "github_version": "main",  # Version
     "conf_py_path": "/docs/",  # Path in the checkout to the docs root
 }
