@@ -14,18 +14,16 @@ def merge_big_cell(
 ) -> AnnData:
     """Merge STomics cellbin data to metacell by axis and celltype.
 
-    :param adata: adata object
-    :type adata: AnnData
-    :param resolution: celltype tag in adata.obs
-    :type resolution: str
-    :param prefix: prefix of output file
-    :type prefix: str
-    :param merge_tags: tags to merge
-    :type merge_tags: list[str]
-    :param n: cell numbers to merge, defaults to 30
-    :type n: int, optional
-    :return: merged adata object with resulution and merge_tags
-    :rtype: AnnData
+    Args:
+        adata (AnnData): adata object
+        resolution (str): celltype tag in adata.obs
+        prefix (str): prefix of output file
+        merge_tags (list[str]): tags to merge
+        n (int, optional): cell numbers to merge, defaults to 30
+
+    Returns
+    -------
+        AnnData: merged adata object with resulution and merge_tags
     """
     adata_list = []
     for category in adata.obs[resolution].unique():

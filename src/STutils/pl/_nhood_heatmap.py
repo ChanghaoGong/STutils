@@ -23,26 +23,23 @@ def nhood_heatmap(
 ) -> Axes:
     """Plot neighborhood heatmap.
 
-    :param adata: anndata object
-    :type adata: AnnData
-    :param coord_type: Type of coordinate system, defaults to "generic"
-    :type coord_type: str, optional
-    :param library_key: batch info, defaults to "batch"
-    :type library_key: str, optional
-    :param radius: Compute the graph based on neighborhood radius, defaults to 30
-    :type radius: float, optional
-    :param cluster_key: region or cell cluster key, defaults to "region"
-    :type cluster_key: str, optional
-    :param ax: mpl axes, defaults to None
-    :type ax: Optional[Axes], optional
-    :param figsize: fig size, defaults to (6, 5)
-    :type figsize: tuple, optional
-    :param cmap: colormap, defaults to "YlGn"
-    :type cmap: str, optional
-    :param save: save or not, defaults to True
-    :type save: bool, optional
-    :return: mpl axes
-    :rtype: Axes
+    Args:
+        adata (AnnData): anndata object
+        coord_type (str, optional): Type of coordinate system, defaults
+            to "generic"
+        library_key (str, optional): batch info, defaults to "batch"
+        radius (float, optional): Compute the graph based on
+            neighborhood radius, defaults to 30
+        cluster_key (str, optional): region or cell cluster key,
+            defaults to "region"
+        ax (Optional[Axes], optional): mpl axes, defaults to None
+        figsize (tuple, optional): fig size, defaults to (6, 5)
+        cmap (str, optional): colormap, defaults to "YlGn"
+        save (bool, optional): save or not, defaults to True
+
+    Returns
+    -------
+        Axes: mpl axes
     """
     nhood_percents = nhood_enrichment(
         adata, coord_type=coord_type, library_key=library_key, radius=radius, cluster_key=cluster_key

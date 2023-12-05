@@ -5,10 +5,12 @@ from anndata import AnnData
 def removeBiasGenes(adata: AnnData) -> AnnData:
     """Remove unused genes for human singcle cell analysis
 
-    :param adata: Anndata object
-    :type adata: AnnData
-    :return: filtered anndata
-    :rtype: AnnData
+    Args:
+        adata (AnnData): Anndata object
+
+    Returns
+    -------
+        AnnData: filtered anndata
     """
     malat1 = adata.var_names.str.startswith("MALAT1")
     MTgenes = adata.var_names.str.startswith("MT-")

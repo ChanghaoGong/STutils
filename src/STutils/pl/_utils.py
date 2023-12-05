@@ -10,8 +10,7 @@ import numpy as np
 
 
 def hex_to_rgb(hex_color) -> tuple[int, int, int]:
-    """
-    convert hex color code to rgb
+    """Convert hex color code to rgb
 
     params:
         hex_color: hex color code, like '#FFFFFF'
@@ -44,12 +43,13 @@ def int_to_rgb_idx(
 def getDefaultColors(n: int, type: Literal = 1) -> list:
     """A beautiful color series list for sci plotting!
 
-    :param n: number of colors to generate
-    :type n: int
-    :param type: type, defaults to 1
-    :type type: Literal, optional
-    :return: a color rgb hex list
-    :rtype: list
+    Args:
+        n (int): number of colors to generate
+        type (Literal, optional): type, defaults to 1
+
+    Returns
+    -------
+        list: a color rgb hex list
     """
     if type == 1:
         colors = [
