@@ -10,8 +10,6 @@ jobs:
     name: Upload release to PyPI
     runs-on: ubuntu-latest
     environment: pypi
-    permissions:
-      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
     steps:
       - uses: actions/checkout@v4
         with:
@@ -25,3 +23,6 @@ jobs:
       - run: python -m build
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@v1.8.5
+        with:
+          username: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
