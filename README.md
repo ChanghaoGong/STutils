@@ -4,6 +4,7 @@
 [![Build][badge-build]][link-build]
 [![Documentation][badge-docs]][link-docs]
 [![PyPI](https://img.shields.io/pypi/v/StereoUtils.svg)](https://pypi.org/project/StereoUtils)
+[![Stars](https://img.shields.io/github/stars/ChanghaoGong/STutils?logo=GitHub)](https://github.com/ChanghaoGong/STutils/stargazers)
 
 [badge-tests]: https://github.com/ChanghaoGong/STutils/actions/workflows/test.yaml/badge.svg
 [link-tests]: https://github.com/ChanghaoGong/STutils/actions/workflows/test.yml
