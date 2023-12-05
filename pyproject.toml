@@ -3,7 +3,7 @@ build-backend = "hatchling.build"
 requires = ["hatchling"]
 
 [project]
-name = "STutils-sc"
+name = "STutils"
 version = "0.0.1"
 description = "scanpy extra function for STOmics"
 readme = "README.md"
