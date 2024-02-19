@@ -1,4 +1,5 @@
 """Plotting for nhood heatmap."""
+
 from typing import Optional
 
 import matplotlib.pyplot as plt
