@@ -9,7 +9,15 @@ jobs:
   release:
     name: Upload release to PyPI
     runs-on: ubuntu-latest
+<<<<<<< ours
     environment: pypi
+=======
+    environment:
+      name: pypi
+      url: https://pypi.org/p/STutils
+    permissions:
+      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
+>>>>>>> theirs
     steps:
       - uses: actions/checkout@v4
         with:
