@@ -7,7 +7,7 @@ name = "StereoUtils"
 version = "0.0.1"
 description = "scanpy extra function for STOmics"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {file = "LICENSE"}
 authors = [
     {name = "ChanghaoGong"},
@@ -20,6 +20,7 @@ urls.Source = "https://github.com/ChanghaoGong/STutils"
 urls.Home-page = "https://github.com/ChanghaoGong/STutils"
 dependencies = [
     "anndata",
+<<<<<<< ours
     "scanpy",
     "matplotlib",
     "seaborn",
@@ -35,18 +36,22 @@ dependencies = [
     "attrs",
     "tqdm",
     "session-info"
+=======
+    # for debug logging (referenced from the issue template)
+    "session-info",
+>>>>>>> theirs
 ]
 
 [project.optional-dependencies]
 dev = [
     "pre-commit",
-    "twine>=4.0.2"
+    "twine>=4.0.2",
 ]
 doc = [
     "docutils>=0.8,!=0.18.*,!=0.19.*",
     "sphinx>=4",
     "sphinx-book-theme>=1.0.0",
-    "myst-nb",
+    "myst-nb>=1.1.0",
     "sphinxcontrib-bibtex>=1.0.0",
     "sphinx-autodoc-typehints",
     "sphinxext-opengraph",
@@ -77,12 +82,15 @@ addopts = [
     "--import-mode=importlib",  # allow using test files with same name
 ]
 
-[tool.black]
-line-length = 120
-
 [tool.ruff]
-src = ["src"]
 line-length = 120
+src = ["src"]
+extend-include = ["*.ipynb"]
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
 select = [
     "F",  # Errors detected by Pyflakes
     "E",  # Error detected by Pycodestyle
@@ -97,7 +105,7 @@ select = [
     "RUF100",  # Report unused noqa directives
 ]
 ignore = [
-    # line too long -> we accept long comment lines; black gets rid of long code lines
+    # line too long -> we accept long comment lines; formatter gets rid of long code lines
     "E501",
     # Do not assign a lambda expression, use a def -> lambda expression assignments are convenient
     "E731",
@@ -111,7 +119,7 @@ ignore = [
     "D107",
     # Errors from function calls in argument defaults. These are fine when the result is immutable.
     "B008",
-    # __magic__ methods are are often self-explanatory, allow missing docstrings
+    # __magic__ methods are often self-explanatory, allow missing docstrings
     "D105",
     # first line should end with a period [Bug: doesn't work with single-line docstrings]
     "D400",
@@ -124,10 +132,10 @@ ignore = [
     "D213",
 ]
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "numpy"
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "docs/*" = ["I"]
 "tests/*" = ["D"]
 "*/__init__.py" = ["F401"]
@@ -141,5 +149,5 @@ skip = [
     "docs/changelog.md",
     "docs/references.bib",
     "docs/references.md",
-    "docs/notebooks/example.ipynb"
+    "docs/notebooks/example.ipynb",
 ]
