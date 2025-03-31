@@ -4,23 +4,35 @@ on:
   release:
     types: [published]
 
+defaults:
+  run:
+    shell: bash -e {0} # -e to fail on error
+
 # Use "trusted publishing", see https://docs.pypi.org/trusted-publishers/
 jobs:
   release:
     name: Upload release to PyPI
     runs-on: ubuntu-latest
+<<<<<<< ours
     environment: pypi
+=======
+    environment:
+      name: pypi
+      url: https://pypi.org/p/STutils
+    permissions:
+      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
+>>>>>>> theirs
     steps:
       - uses: actions/checkout@v4
         with:
           filter: blob:none
           fetch-depth: 0
-      - uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.x"
-          cache: "pip"
-      - run: pip install build
-      - run: python -m build
+          cache-dependency-glob: pyproject.toml
+      - name: Build package
+        run: uv build
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@v1.8.5
         with:
