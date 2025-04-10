@@ -1,12 +1,11 @@
 import random
 from collections.abc import Mapping
-from typing import (
-    Literal,
-)
+from typing import Literal, Union, List
 
 import matplotlib
 import matplotlib.cm as cm
 import numpy as np
+import cv2
 
 
 def hex_to_rgb(hex_color) -> tuple[int, int, int]:
@@ -40,7 +39,58 @@ def int_to_rgb_idx(
     return colormap[arr]
 
 
-def getDefaultColors(n: int, type: Literal = 1) -> list:
+def crop_to_square_with_padding(im, edge_cut=300):
+    """
+    裁剪图像，使其包含所有非纯黑色像素，并扩展为正方形。较短的一侧会用黑色填充以使长宽相等。
+
+    参数:
+    - im: str，图像。
+    - edge_cut: int，扩展边缘的像素数，默认为300。
+
+    返回:
+    - im_final: np.ndarray，裁剪并扩展后的正方形图像。
+    """
+    if len(im.shape) == 2:
+        gray = im
+    else:
+        # 将RGB图像转换为灰度图像
+        gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+
+    # 定义纯黑色的阈值
+    threshold = 10  # 可以根据需要调整这个值
+
+    # 创建掩码
+    mask = gray > threshold
+
+    # 找到非纯黑色像素的坐标
+    non_black_coords = np.argwhere(mask)
+    y1, x1 = non_black_coords.min(axis=0)
+    y2, x2 = non_black_coords.max(axis=0)
+
+    # 裁剪非纯黑色像素的区域
+    cropped_im = im[y1:y2, x1:x2]
+
+    # 如果裁剪后的图像只有一个通道，则添加一个通道维度
+    if len(cropped_im.shape) == 2:
+        cropped_im = np.expand_dims(cropped_im, axis=-1)
+
+    # 计算裁剪区域的长和宽
+    height, width, _ = cropped_im.shape
+
+    # 选择较大的维度
+    max_dim = max(height, width) + edge_cut // 2
+    # 创建一个新的正方形图像，用黑色填充
+    im_square = np.zeros((max_dim, max_dim, 3), dtype=np.uint8)
+
+    # 将裁剪后的图像放在新图像的中心
+    x_offset = (max_dim - width) // 2
+    y_offset = (max_dim - height) // 2
+    im_square[y_offset : y_offset + height, x_offset : x_offset + width] = cropped_im
+
+    return im_square
+
+
+def getDefaultColors(n: int, type: Union[Literal[1], List] = 1) -> list:
     """A beautiful color series list for sci plotting!
 
     Args:
@@ -399,6 +449,9 @@ def getDefaultColors(n: int, type: Literal = 1) -> list:
     ]:
         cmap = cm.get_cmap(type)
         colors = [matplotlib.colors.rgb2hex(rgba) for rgba in cmap.colors]
+    # if "type" is a list retrun itself
+    elif isinstance(type, list):
+        colors = type
 
     if n:
         if n <= len(colors):
