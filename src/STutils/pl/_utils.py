@@ -1,11 +1,11 @@
 import random
 from collections.abc import Mapping
-from typing import Literal, Union, List
+from typing import List, Literal, Union
 
+import cv2
 import matplotlib
 import matplotlib.cm as cm
 import numpy as np
-import cv2
 
 
 def hex_to_rgb(hex_color) -> tuple[int, int, int]:

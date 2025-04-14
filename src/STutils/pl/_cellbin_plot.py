@@ -1,20 +1,19 @@
-from collections.abc import Sequence
-from typing import Literal, Optional, Dict, List, Union
+from typing import Dict, Literal, Optional, Union
 
 import cv2
 import matplotlib as mpl
 import matplotlib.colors as mcolors
+import matplotlib.gridspec as gridspec
+import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from anndata import AnnData
 from matplotlib.axes import Axes
-from matplotlib_scalebar.scalebar import ScaleBar
-import matplotlib.gridspec as gridspec
-import matplotlib.patches as patches
 from matplotlib.offsetbox import AnchoredText
+from matplotlib_scalebar.scalebar import ScaleBar
 
-from ._utils import getDefaultColors, hex_to_rgb, int_to_rgb_idx, crop_to_square_with_padding
+from ._utils import crop_to_square_with_padding, getDefaultColors, hex_to_rgb, int_to_rgb_idx
 
 
 def cell_bin_plot(mask: str, res: pd.DataFrame, tag: str, colors: Optional[Union[list, Dict[str, str]]]) -> np.ndarray:
