@@ -34,7 +34,9 @@ def merge_big_cell(
     for i, st_adata in enumerate(adata_list):
         t = st_adata.shape[0] // n
         X = st_adata.obs[["x", "y"]].values
-        spectral_clustering = BisectingKMeans(n_clusters=t, bisecting_strategy="largest_cluster", random_state=0)
+        spectral_clustering = BisectingKMeans(
+            n_clusters=t, bisecting_strategy="largest_cluster", random_state=0
+        )
         cluster_labels = spectral_clustering.fit_predict(X)
         # cluster_sizes = np.bincount(cluster_labels)
         # sorted_clusters = np.argsort(cluster_sizes)[::-1]
@@ -43,17 +45,23 @@ def merge_big_cell(
         cluster = st_adata.obs[resolution].iloc[0]
         adata_idx = adata.obs[resolution].unique().to_list().index(cluster)
         merged_cluster_labels_i = pd.DataFrame(
-            list(zip(st_adata.obs_names, [f"{i-1}_{adata_idx}" for i in cluster_labels])),
+            list(
+                zip(st_adata.obs_names, [f"{i-1}_{adata_idx}" for i in cluster_labels])
+            ),
             columns=["cell_id", "merged_cluster"],
         )
-        merged_cluster_labels = pd.concat([merged_cluster_labels, merged_cluster_labels_i], axis=0)
+        merged_cluster_labels = pd.concat(
+            [merged_cluster_labels, merged_cluster_labels_i], axis=0
+        )
         # 计算每个簇的中心坐标和gene count
         cluster_centers = []
         cluster_gene_counts = []
         cluster_cell_counts = []
         for cluster_id in np.unique(cluster_labels):
             cluster_spots = st_adata.obs.index[cluster_labels == cluster_id]
-            cluster_center = np.mean(st_adata.obs.loc[cluster_spots, ["x", "y"]], axis=0)
+            cluster_center = np.mean(
+                st_adata.obs.loc[cluster_spots, ["x", "y"]], axis=0
+            )
             cluster_gene_count = np.sum(st_adata[cluster_spots].X, axis=0)
             cluster_centers.append(cluster_center)
             cluster_gene_counts.append(cluster_gene_count)
@@ -63,7 +71,9 @@ def merge_big_cell(
             X=np.array(cluster_gene_counts)[:, 0, :],
             obsm={"spatial": np.array(cluster_centers)},
             obs=pd.DataFrame(
-                cluster_cell_counts, index=np.arange(len(cluster_centers)), columns=["cluster_cell_counts"]
+                cluster_cell_counts,
+                index=np.arange(len(cluster_centers)),
+                columns=["cluster_cell_counts"],
             ),
             var=adata.var,
         )
@@ -71,7 +81,9 @@ def merge_big_cell(
         for tag in merge_tags:
             adata_cluster.obs[tag] = st_adata.obs[tag].iloc[0]
         merged_adatas.append(adata_cluster)
-    merged_cluster_labels.to_csv(f"merged_cluster_labels_{prefix}.txt", sep="\t", index=None)
+    merged_cluster_labels.to_csv(
+        f"merged_cluster_labels_{prefix}.txt", sep="\t", index=None
+    )
     # 合并所有合并后的adata对象
     merged_adata = sc.AnnData.concatenate(*merged_adatas, join="outer")
     return merged_adata

@@ -52,7 +52,12 @@ def getDEG(
         ]
     )
     for group in groups:
-        df = pd.DataFrame({key: result[key][group] for key in ["names", "logfoldchanges", "pvals", "pvals_adj"]})
+        df = pd.DataFrame(
+            {
+                key: result[key][group]
+                for key in ["names", "logfoldchanges", "pvals", "pvals_adj"]
+            }
+        )
         df["group"] = group
         cluster_cells = adata.obs[cluster] == group
         cluster_data = adata[cluster_cells, :]
@@ -62,7 +67,9 @@ def getDEG(
             mean_expression = np.mean(cluster_data.X.toarray(), axis=0)
         df = pd.merge(
             df,
-            pd.Series(mean_expression, index=cluster_data.var_names, name="mean_expression"),
+            pd.Series(
+                mean_expression, index=cluster_data.var_names, name="mean_expression"
+            ),
             left_on="names",
             right_index=True,
         )
@@ -84,7 +91,9 @@ def getDEG(
             axis=0,
         )
         df_filtered = df[
-            (df["pvals_adj"] < qval_cutoff) & (df["mean_expression"] > mean_expr_cutoff) & (df["logfoldchanges"] > 0)
+            (df["pvals_adj"] < qval_cutoff)
+            & (df["mean_expression"] > mean_expr_cutoff)
+            & (df["logfoldchanges"] > 0)
         ]
         df_filtered.set_index("names", inplace=True, drop=False)
         # sort rows based on logfoldchange
@@ -100,8 +109,13 @@ def getDEG(
         colnum = i - ((i // 4) * 4)
         ax = fig.add_subplot(gs[rownum, colnum])
         data = diff_genes[diff_genes["group"] == group]
-        sns.scatterplot(data=data, x="logfoldchanges", y="mean_expression", color="black")
-        sig_genes = data.loc[(data["pvals_adj"] < qval_cutoff) & (data["mean_expression"] > mean_expr_cutoff)]
+        sns.scatterplot(
+            data=data, x="logfoldchanges", y="mean_expression", color="black"
+        )
+        sig_genes = data.loc[
+            (data["pvals_adj"] < qval_cutoff)
+            & (data["mean_expression"] > mean_expr_cutoff)
+        ]
         sig_genes_top5 = sig_genes.nlargest(5, "logfoldchanges")
         texts = []
         for _, row in sig_genes_top5.iterrows():

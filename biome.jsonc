@@ -8,9 +8,9 @@
                 "formatter": { "trailingCommas": "all" },
                 "parser": {
                     "allowComments": true,
-                    "allowTrailingCommas": true,
-                },
-            },
-        },
-    ],
+                    "allowTrailingCommas": true
+                }
+            }
+        }
+    ]
 }

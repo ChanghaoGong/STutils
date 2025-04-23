@@ -71,16 +71,25 @@ def derive_auc_threshold(ex_mtx: pd.DataFrame) -> pd.DataFrame:
         used for AUC calculation will have had a detected expression in
         the single-cell experiment.
     """
-    return pd.Series(np.count_nonzero(ex_mtx, axis=1)).quantile([0.01, 0.05, 0.10, 0.50, 1]) / ex_mtx.shape[1]
+    return (
+        pd.Series(np.count_nonzero(ex_mtx, axis=1)).quantile(
+            [0.01, 0.05, 0.10, 0.50, 1]
+        )
+        / ex_mtx.shape[1]
+    )
 
 
 enrichment = enrichment4cells
 
 
-def _enrichment(shared_ro_memory_array, modules, genes, cells, auc_threshold, auc_mtx, offset):
+def _enrichment(
+    shared_ro_memory_array, modules, genes, cells, auc_threshold, auc_mtx, offset
+):
     # The rankings dataframe is properly reconstructed (checked this).
     df_rnk = pd.DataFrame(
-        data=np.frombuffer(shared_ro_memory_array, dtype=DTYPE).reshape(len(cells), len(genes)),
+        data=np.frombuffer(shared_ro_memory_array, dtype=DTYPE).reshape(
+            len(cells), len(genes)
+        ),
         columns=genes,
         index=cells,
     )
@@ -88,9 +97,9 @@ def _enrichment(shared_ro_memory_array, modules, genes, cells, auc_threshold, au
     result_mtx = np.frombuffer(auc_mtx.get_obj(), dtype="d")
     inc = len(cells)
     for idx, module in enumerate(modules):
-        result_mtx[offset + (idx * inc) : offset + ((idx + 1) * inc)] = enrichment4cells(
-            df_rnk, module, auc_threshold
-        ).values.ravel(order="C")
+        result_mtx[
+            offset + (idx * inc) : offset + ((idx + 1) * inc)
+        ] = enrichment4cells(df_rnk, module, auc_threshold).values.ravel(order="C")
 
 
 def aucell4r(
@@ -175,9 +184,13 @@ def aucell4r(
 
         # Reconstitute the results array. Using C or row-major ordering.
         aucs = pd.DataFrame(
-            data=np.ctypeslib.as_array(auc_mtx.get_obj()).reshape(len(signatures), len(cells)),
+            data=np.ctypeslib.as_array(auc_mtx.get_obj()).reshape(
+                len(signatures), len(cells)
+            ),
             columns=pd.Index(data=cells, name="Cell"),
-            index=pd.Index(data=list(map(attrgetter("name"), signatures)), name="Regulon"),
+            index=pd.Index(
+                data=list(map(attrgetter("name"), signatures)), name="Regulon"
+            ),
         ).T
     return aucs / aucs.max(axis=0) if normalize else aucs
 
