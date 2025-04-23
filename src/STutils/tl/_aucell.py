@@ -4,7 +4,6 @@ from math import ceil
 from multiprocessing import Array, Process, cpu_count
 from multiprocessing.sharedctypes import RawArray
 from operator import attrgetter, mul
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -202,8 +201,8 @@ def aucell(
     noweights: bool = False,
     seed: int = 42,
     num_workers: int = cpu_count(),
-    use_raw: Optional[bool] = None,
-) -> Optional[AnnData]:
+    use_raw: bool | None = None,
+) -> AnnData | None:
     """Calculate enrichment of gene signatures for single cells.
 
     Parameters

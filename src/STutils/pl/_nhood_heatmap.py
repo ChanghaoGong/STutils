@@ -1,5 +1,4 @@
 """Plotting for nhood heatmap."""
-from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,7 +15,7 @@ def nhood_heatmap(
     library_key: str = "batch",
     radius: float = 30,
     cluster_key: str = "region",
-    ax: Optional[Axes] = None,
+    ax: Axes | None = None,
     figsize: tuple = (6, 5),
     cmap: str = "YlGn",
     save: bool = True,

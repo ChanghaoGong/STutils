@@ -46,7 +46,11 @@ def merge_big_cell(
         adata_idx = adata.obs[resolution].unique().to_list().index(cluster)
         merged_cluster_labels_i = pd.DataFrame(
             list(
-                zip(st_adata.obs_names, [f"{i-1}_{adata_idx}" for i in cluster_labels])
+                zip(
+                    st_adata.obs_names,
+                    [f"{i-1}_{adata_idx}" for i in cluster_labels],
+                    strict=False,
+                )
             ),
             columns=["cell_id", "merged_cluster"],
         )

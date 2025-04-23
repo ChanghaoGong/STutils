@@ -1,24 +1,23 @@
-from collections.abc import Sequence
-from typing import Literal, Optional, Dict, List, Union
+from typing import Literal
 
 import cv2
 import matplotlib as mpl
 import matplotlib.colors as mcolors
+import matplotlib.gridspec as gridspec
+import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from anndata import AnnData
 from matplotlib.axes import Axes
-from matplotlib_scalebar.scalebar import ScaleBar
-import matplotlib.gridspec as gridspec
-import matplotlib.patches as patches
 from matplotlib.offsetbox import AnchoredText
+from matplotlib_scalebar.scalebar import ScaleBar
 
 from ._utils import (
+    crop_to_square_with_padding,
     getDefaultColors,
     hex_to_rgb,
     int_to_rgb_idx,
-    crop_to_square_with_padding,
 )
 
 
@@ -26,7 +25,7 @@ def cell_bin_plot(
     mask: str,
     res: pd.DataFrame,
     tag: str,
-    colors: Optional[Union[list, Dict[str, str]]],
+    colors: list | dict[str, str] | None,
 ) -> np.ndarray:
     """Cell bin plot for stereo-seq data
 
@@ -69,7 +68,7 @@ def cell_bin_plot(
     colorMap = {
         connectedComponentsLabel: hex_to_rgb(color)
         for connectedComponentsLabel, color in zip(
-            res["connectedComponentsLabel"].values, res["color"].values
+            res["connectedComponentsLabel"].values, res["color"].values, strict=False
         )
     }
     # 将背景（标签为0）的颜色设为黑色
@@ -97,7 +96,7 @@ def plot_cellbin_gradient(
     background: Literal["white", "black"] = "white",
     scale: float = 0.5,
     length_fraction: float = 0.25,
-    ax: Optional[Axes] = None,
+    ax: Axes | None = None,
     save: bool = True,
 ) -> Axes:
     """Plot cellbin gradient image
@@ -207,14 +206,14 @@ def plot_cellbin_discrete(
     mask: str,
     tag: str,
     prefix: str,
-    colors: Optional[Union[int, Dict[str, str], str]] = 9,
+    colors: int | dict[str, str] | str | None = 9,
     dpi: int = 600,
     edge_cut: int = 300,
     background: Literal["white", "black"] = "white",
     add_scale_bar: bool = True,
     scale: float = 0.5,
     length_fraction: float = 0.25,
-    ax: Optional[Axes] = None,
+    ax: Axes | None = None,
     add_legend=True,
     save: bool = True,
 ) -> Axes:
