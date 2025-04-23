@@ -42,12 +42,18 @@ def nhood_heatmap(
         Axes: mpl axes
     """
     nhood_percents = nhood_enrichment(
-        adata, coord_type=coord_type, library_key=library_key, radius=radius, cluster_key=cluster_key
+        adata,
+        coord_type=coord_type,
+        library_key=library_key,
+        radius=radius,
+        cluster_key=cluster_key,
     )
     # Remove the numbers on the diagonal
     nhood_percents = nhood_percents.mask(np.eye(len(nhood_percents), dtype=bool))
     # the numbers on the diagonal equal to max value in the matrix
-    nhood_percents = nhood_percents.mask(np.eye(len(nhood_percents), dtype=bool), nhood_percents.max().max())
+    nhood_percents = nhood_percents.mask(
+        np.eye(len(nhood_percents), dtype=bool), nhood_percents.max().max()
+    )
     # zscore nhood_percents
     # nhood_percents = (nhood_percents - nhood_percents.mean()) / nhood_percents.std()
     if ax is None:
