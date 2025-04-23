@@ -26,9 +26,13 @@ def nhood_enrichment(
     -------
         pd.DataFrame: a dataframe of neighborhood enrichment
     """
-    sq.gr.spatial_neighbors(adata, coord_type=coord_type, library_key=library_key, radius=radius)
+    sq.gr.spatial_neighbors(
+        adata, coord_type=coord_type, library_key=library_key, radius=radius
+    )
     sq.gr.nhood_enrichment(adata, cluster_key=cluster_key)
-    region_number = adata.obs[cluster_key].value_counts()[adata.obs[cluster_key].cat.categories]
+    region_number = adata.obs[cluster_key].value_counts()[
+        adata.obs[cluster_key].cat.categories
+    ]
     nhood_counts = pd.DataFrame(
         adata.uns[f"{cluster_key}_nhood_enrichment"]["count"],
         index=adata.obs[cluster_key].cat.categories,

@@ -1,23 +1,32 @@
-from collections.abc import Sequence
-from typing import Literal, Optional, Dict, List, Union
+from typing import Literal
 
 import cv2
 import matplotlib as mpl
 import matplotlib.colors as mcolors
+import matplotlib.gridspec as gridspec
+import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from anndata import AnnData
 from matplotlib.axes import Axes
-from matplotlib_scalebar.scalebar import ScaleBar
-import matplotlib.gridspec as gridspec
-import matplotlib.patches as patches
 from matplotlib.offsetbox import AnchoredText
+from matplotlib_scalebar.scalebar import ScaleBar
 
-from ._utils import getDefaultColors, hex_to_rgb, int_to_rgb_idx, crop_to_square_with_padding
+from ._utils import (
+    crop_to_square_with_padding,
+    getDefaultColors,
+    hex_to_rgb,
+    int_to_rgb_idx,
+)
 
 
-def cell_bin_plot(mask: str, res: pd.DataFrame, tag: str, colors: Optional[Union[list, Dict[str, str]]]) -> np.ndarray:
+def cell_bin_plot(
+    mask: str,
+    res: pd.DataFrame,
+    tag: str,
+    colors: list | dict[str, str] | None,
+) -> np.ndarray:
     """Cell bin plot for stereo-seq data
 
     Args:
@@ -58,7 +67,9 @@ def cell_bin_plot(mask: str, res: pd.DataFrame, tag: str, colors: Optional[Union
     # 创建一个颜色映射，将每个联通区域标签映射到对应的颜色
     colorMap = {
         connectedComponentsLabel: hex_to_rgb(color)
-        for connectedComponentsLabel, color in zip(res["connectedComponentsLabel"].values, res["color"].values)
+        for connectedComponentsLabel, color in zip(
+            res["connectedComponentsLabel"].values, res["color"].values, strict=False
+        )
     }
     # 将背景（标签为0）的颜色设为黑色
     colorMap[0] = (0, 0, 0)
@@ -85,7 +96,7 @@ def plot_cellbin_gradient(
     background: Literal["white", "black"] = "white",
     scale: float = 0.5,
     length_fraction: float = 0.25,
-    ax: Optional[Axes] = None,
+    ax: Axes | None = None,
     save: bool = True,
 ) -> Axes:
     """Plot cellbin gradient image
@@ -124,7 +135,9 @@ def plot_cellbin_gradient(
     # cluster_number = clusters.shape[0]
     cmap = plt.cm.get_cmap("RdYlBu_r")  # get color plette
     norm = mcolors.Normalize(vmin=clusters.min(), vmax=clusters.max())
-    colors = {value: mcolors.rgb2hex(cmap(norm(value))) for value in clusters}  # get color for each cluster
+    colors = {
+        value: mcolors.rgb2hex(cmap(norm(value))) for value in clusters
+    }  # get color for each cluster
 
     # plot cellbin gradient image
     im = cell_bin_plot(mask=mask, res=res, tag=tag, colors=colors)
@@ -149,7 +162,9 @@ def plot_cellbin_gradient(
     #     fig, ax = plt.subplots(figsize=(5, 5), dpi=dpi, gridspec_kw={"wspace": 0, "hspace": 0})
     #     plt.subplots_adjust(0, 0, 1, 1)
     if save:
-        fig, ax = plt.subplots(figsize=(5, 5), dpi=dpi, gridspec_kw={"wspace": 0, "hspace": 0})
+        fig, ax = plt.subplots(
+            figsize=(5, 5), dpi=dpi, gridspec_kw={"wspace": 0, "hspace": 0}
+        )
         fig.patch.set_facecolor(background)
         plt.subplots_adjust(0, 0, 1, 1)
     ax.axis("off")
@@ -169,7 +184,9 @@ def plot_cellbin_gradient(
 
     # Create colorbar and add to ax
     if add_legend:
-        cb = plt.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax, shrink=0.6)
+        cb = plt.colorbar(
+            plt.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax, shrink=0.6
+        )
         cb.solids.set_edgecolor("face")
         cb.solids.set_facecolor(background)
 
@@ -189,14 +206,14 @@ def plot_cellbin_discrete(
     mask: str,
     tag: str,
     prefix: str,
-    colors: Optional[Union[int, Dict[str, str], str]] = 9,
+    colors: int | dict[str, str] | str | None = 9,
     dpi: int = 600,
     edge_cut: int = 300,
     background: Literal["white", "black"] = "white",
     add_scale_bar: bool = True,
     scale: float = 0.5,
     length_fraction: float = 0.25,
-    ax: Optional[Axes] = None,
+    ax: Axes | None = None,
     add_legend=True,
     save: bool = True,
 ) -> Axes:
@@ -257,7 +274,9 @@ def plot_cellbin_discrete(
 
     # new fig for save
     if save:
-        fig, ax = plt.subplots(figsize=(5, 5), dpi=dpi, gridspec_kw={"wspace": 0, "hspace": 0})
+        fig, ax = plt.subplots(
+            figsize=(5, 5), dpi=dpi, gridspec_kw={"wspace": 0, "hspace": 0}
+        )
         fig.patch.set_facecolor(background)
         plt.subplots_adjust(0, 0, 1, 1)
 
@@ -278,9 +297,19 @@ def plot_cellbin_discrete(
 
     # Create a legend for the discrete colors
     if add_legend:
-        legend_labels = [str(cluster) for cluster in clusters]  # Assuming clusters is a list of labels
-        legend_patches = [mpl.patches.Patch(color=colors[i], label=legend_labels[i]) for i in range(cluster_number)]
-        legend = ax.legend(handles=legend_patches, loc="lower left", fontsize=8, bbox_to_anchor=(1.05, 0))
+        legend_labels = [
+            str(cluster) for cluster in clusters
+        ]  # Assuming clusters is a list of labels
+        legend_patches = [
+            mpl.patches.Patch(color=colors[i], label=legend_labels[i])
+            for i in range(cluster_number)
+        ]
+        legend = ax.legend(
+            handles=legend_patches,
+            loc="lower left",
+            fontsize=8,
+            bbox_to_anchor=(1.05, 0),
+        )
         legend.set_title(tag, prop={"size": 8, "weight": "bold"})
         # set legend text color white
         legend.get_title().set_color(text_color)
@@ -296,7 +325,16 @@ def plot_cellbin_discrete(
 
 
 def plot_zoom_cellbin(
-    adata, mask, tag, prefix, zoom_position1, zoom_position2, colors=10, zoom_size=3000, height=5, edge_cut=300
+    adata,
+    mask,
+    tag,
+    prefix,
+    zoom_position1,
+    zoom_position2,
+    colors=10,
+    zoom_size=3000,
+    height=5,
+    edge_cut=300,
 ):
     im = cv2.imread(mask, cv2.IMREAD_GRAYSCALE)
     im = crop_to_square_with_padding(im, edge_cut=edge_cut)
@@ -309,7 +347,9 @@ def plot_zoom_cellbin(
     # 计算图片长宽
     width_ratios = figsize[1] / (figsize[0] / (zoom_size * 2) * zoom_size)
     print(width_ratios)
-    width = (figsize[1] / (figsize[0] / height)) + ((figsize[1] / (figsize[0] / height)) / width_ratios)
+    width = (figsize[1] / (figsize[0] / height)) + (
+        (figsize[1] / (figsize[0] / height)) / width_ratios
+    )
     print(width)
 
     # 创建一个图形和网格
@@ -334,26 +374,47 @@ def plot_zoom_cellbin(
     ax1.axis("off")
 
     # 提取放大区域
-    zoomed_region1 = image[region1[1] : region1[1] + region1[3], region1[0] : region1[0] + region1[2]]
-    zoomed_region2 = image[region2[1] : region2[1] + region2[3], region2[0] : region2[0] + region2[2]]
+    zoomed_region1 = image[
+        region1[1] : region1[1] + region1[3], region1[0] : region1[0] + region1[2]
+    ]
+    zoomed_region2 = image[
+        region2[1] : region2[1] + region2[3], region2[0] : region2[0] + region2[2]
+    ]
 
     # 添加边框
-    rect = patches.Rectangle((0, 0), figsize[1], figsize[0], linewidth=2, edgecolor="white", facecolor="none")
+    rect = patches.Rectangle(
+        (0, 0), figsize[1], figsize[0], linewidth=2, edgecolor="white", facecolor="none"
+    )
     ax1.add_patch(rect)
 
     # 在原图上标注放大区域（白色框体）
     rect1 = patches.Rectangle(
-        (region1[0], region1[1]), region1[2], region1[3], linewidth=2, edgecolor="white", facecolor="none"
+        (region1[0], region1[1]),
+        region1[2],
+        region1[3],
+        linewidth=2,
+        edgecolor="white",
+        facecolor="none",
     )
     rect2 = patches.Rectangle(
-        (region2[0], region2[1]), region2[2], region2[3], linewidth=2, edgecolor="white", facecolor="none"
+        (region2[0], region2[1]),
+        region2[2],
+        region2[3],
+        linewidth=2,
+        edgecolor="white",
+        facecolor="none",
     )
     ax1.add_patch(rect1)
     ax1.add_patch(rect2)
 
     # 添加标题
     text_box = AnchoredText(
-            prefix, frameon=True, loc=2, pad=0.4, borderpad=0.1, prop={"backgroundcolor":"white", "fontsize":20}
+        prefix,
+        frameon=True,
+        loc=2,
+        pad=0.4,
+        borderpad=0.1,
+        prop={"backgroundcolor": "white", "fontsize": 20},
     )
     ax1.add_artist(text_box)
 
@@ -385,12 +446,19 @@ def plot_zoom_cellbin(
     ax2.axis("off")
 
     # 添加边框
-    rect = patches.Rectangle((0, 0), zoom_size, zoom_size, linewidth=2, edgecolor="white", facecolor="none")
+    rect = patches.Rectangle(
+        (0, 0), zoom_size, zoom_size, linewidth=2, edgecolor="white", facecolor="none"
+    )
     ax2.add_patch(rect)
 
     # 在放大区域1上添加标题
     text_box = AnchoredText(
-        "1", frameon=True, loc=2, pad=0.4, borderpad=0.1, prop={"backgroundcolor":"white", "fontsize":20}
+        "1",
+        frameon=True,
+        loc=2,
+        pad=0.4,
+        borderpad=0.1,
+        prop={"backgroundcolor": "white", "fontsize": 20},
     )
     ax2.add_artist(text_box)
 
@@ -400,12 +468,19 @@ def plot_zoom_cellbin(
     ax3.axis("off")
 
     # 添加边框
-    rect = patches.Rectangle((0, 0), zoom_size, zoom_size, linewidth=2, edgecolor="white", facecolor="none")
+    rect = patches.Rectangle(
+        (0, 0), zoom_size, zoom_size, linewidth=2, edgecolor="white", facecolor="none"
+    )
     ax3.add_patch(rect)
 
     # 在放大区域2上添加标题
     text_box = AnchoredText(
-        "2", frameon=True, loc=2, pad=0.4, borderpad=0.1, prop={"backgroundcolor":"white", "fontsize":20}
+        "2",
+        frameon=True,
+        loc=2,
+        pad=0.4,
+        borderpad=0.1,
+        prop={"backgroundcolor": "white", "fontsize": 20},
     )
     ax3.add_artist(text_box)
     # 调整布局，使图像拼接成一个矩形

@@ -10,11 +10,25 @@
       "author_full_name": "ChanghaoGong",
       "author_email": "gongchanghao@genomics.cn",
       "github_user": "ChanghaoGong",
+
       "project_repo": "https://github.com/ChanghaoGong/STutils",
       "license": "MIT License",
       "_copy_without_render": [
         ".github/workflows/**.yaml",
+        ".github/workflows/test.yaml",
         "docs/_templates/autosummary/**.rst"
+      ],
+      "_exclude_on_template_update": [
+        "CHANGELOG.md",
+        "LICENSE",
+        "README.md",
+        "docs/api.md",
+        "docs/index.md",
+        "docs/notebooks/example.ipynb",
+        "docs/references.bib",
+        "docs/references.md",
+        "src/**",
+        "tests/**"
       ],
       "_render_devdocs": false,
       "_jinja2_env_vars": {

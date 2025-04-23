@@ -19,12 +19,24 @@ def removeBiasGenes(adata: AnnData) -> AnnData:
     RPgenes2 = adata.var_names.str.contains("^RP[SL]")
     CTCgenes = adata.var_names.str.startswith("CTC") & adata.var_names.str.contains("-")
     MIRgenes = adata.var_names.str.startswith("MIR")
-    ACgenes = adata.var_names.str.contains("^AC[0-9]") & adata.var_names.str.contains(".")
+    ACgenes = adata.var_names.str.contains("^AC[0-9]") & adata.var_names.str.contains(
+        "."
+    )
     CTgenes = adata.var_names.str.startswith("CT") & adata.var_names.str.contains("-")
     LINCgenes = adata.var_names.str.contains("^LINC[0-9]")
     ALgenes = adata.var_names.str.contains("^AL") & adata.var_names.str.contains(".")
     remove_genes = (
-        malat1 | MTgenes | hb_genes | RPgenes | RPgenes2 | CTCgenes | MIRgenes | ACgenes | CTgenes | LINCgenes | ALgenes
+        malat1
+        | MTgenes
+        | hb_genes
+        | RPgenes
+        | RPgenes2
+        | CTCgenes
+        | MIRgenes
+        | ACgenes
+        | CTgenes
+        | LINCgenes
+        | ALgenes
     )
     keep = np.invert(remove_genes)
     adata = adata[:, keep]
