@@ -1,23 +1,22 @@
-from collections.abc import Sequence
-from typing import Literal, Optional, Dict, List, Union
+from typing import Literal, Optional, Union
 
 import cv2
 import matplotlib as mpl
 import matplotlib.colors as mcolors
+import matplotlib.gridspec as gridspec
+import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from anndata import AnnData
 from matplotlib.axes import Axes
-from matplotlib_scalebar.scalebar import ScaleBar
-import matplotlib.gridspec as gridspec
-import matplotlib.patches as patches
 from matplotlib.offsetbox import AnchoredText
+from matplotlib_scalebar.scalebar import ScaleBar
 
-from ._utils import getDefaultColors, hex_to_rgb, int_to_rgb_idx, crop_to_square_with_padding
+from ._utils import crop_to_square_with_padding, getDefaultColors, hex_to_rgb, int_to_rgb_idx
 
 
-def cell_bin_plot(mask: str, res: pd.DataFrame, tag: str, colors: Optional[Union[list, Dict[str, str]]]) -> np.ndarray:
+def cell_bin_plot(mask: str, res: pd.DataFrame, tag: str, colors: Optional[Union[list, dict[str, str]]]) -> np.ndarray:
     """Cell bin plot for stereo-seq data
 
     Args:
@@ -189,7 +188,7 @@ def plot_cellbin_discrete(
     mask: str,
     tag: str,
     prefix: str,
-    colors: Optional[Union[int, Dict[str, str], str]] = 9,
+    colors: Optional[Union[int, dict[str, str], str]] = 9,
     dpi: int = 600,
     edge_cut: int = 300,
     background: Literal["white", "black"] = "white",
@@ -353,7 +352,7 @@ def plot_zoom_cellbin(
 
     # 添加标题
     text_box = AnchoredText(
-            prefix, frameon=True, loc=2, pad=0.4, borderpad=0.1, prop={"backgroundcolor":"white", "fontsize":20}
+        prefix, frameon=True, loc=2, pad=0.4, borderpad=0.1, prop={"backgroundcolor": "white", "fontsize": 20}
     )
     ax1.add_artist(text_box)
 
@@ -390,7 +389,7 @@ def plot_zoom_cellbin(
 
     # 在放大区域1上添加标题
     text_box = AnchoredText(
-        "1", frameon=True, loc=2, pad=0.4, borderpad=0.1, prop={"backgroundcolor":"white", "fontsize":20}
+        "1", frameon=True, loc=2, pad=0.4, borderpad=0.1, prop={"backgroundcolor": "white", "fontsize": 20}
     )
     ax2.add_artist(text_box)
 
@@ -405,7 +404,7 @@ def plot_zoom_cellbin(
 
     # 在放大区域2上添加标题
     text_box = AnchoredText(
-        "2", frameon=True, loc=2, pad=0.4, borderpad=0.1, prop={"backgroundcolor":"white", "fontsize":20}
+        "2", frameon=True, loc=2, pad=0.4, borderpad=0.1, prop={"backgroundcolor": "white", "fontsize": 20}
     )
     ax3.add_artist(text_box)
     # 调整布局，使图像拼接成一个矩形

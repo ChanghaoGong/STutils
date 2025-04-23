@@ -1,11 +1,11 @@
 import random
 from collections.abc import Mapping
-from typing import Literal, Union, List
+from typing import Literal, Union
 
+import cv2
 import matplotlib
 import matplotlib.cm as cm
 import numpy as np
-import cv2
 
 
 def hex_to_rgb(hex_color) -> tuple[int, int, int]:
@@ -90,7 +90,7 @@ def crop_to_square_with_padding(im, edge_cut=300):
     return im_square
 
 
-def getDefaultColors(n: int, type: Union[Literal[1], List] = 1) -> list:
+def getDefaultColors(n: int, type: Union[Literal[1], list] = 1) -> list:
     """A beautiful color series list for sci plotting!
 
     Args:
