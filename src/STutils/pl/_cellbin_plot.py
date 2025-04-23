@@ -353,7 +353,7 @@ def plot_zoom_cellbin(
 
     # 添加标题
     text_box = AnchoredText(
-        prefix, frameon=True, loc=2, pad=0.4, borderpad=0.1, prop=dict(backgroundcolor="white", fontsize=20)
+            prefix, frameon=True, loc=2, pad=0.4, borderpad=0.1, prop={"backgroundcolor":"white", "fontsize":20}
     )
     ax1.add_artist(text_box)
 
@@ -390,7 +390,7 @@ def plot_zoom_cellbin(
 
     # 在放大区域1上添加标题
     text_box = AnchoredText(
-        "1", frameon=True, loc=2, pad=0.4, borderpad=0.1, prop=dict(backgroundcolor="white", fontsize=20)
+        "1", frameon=True, loc=2, pad=0.4, borderpad=0.1, prop={"backgroundcolor":"white", "fontsize":20}
     )
     ax2.add_artist(text_box)
 
@@ -405,7 +405,7 @@ def plot_zoom_cellbin(
 
     # 在放大区域2上添加标题
     text_box = AnchoredText(
-        "2", frameon=True, loc=2, pad=0.4, borderpad=0.1, prop=dict(backgroundcolor="white", fontsize=20)
+        "2", frameon=True, loc=2, pad=0.4, borderpad=0.1, prop={"backgroundcolor":"white", "fontsize":20}
     )
     ax3.add_artist(text_box)
     # 调整布局，使图像拼接成一个矩形
