@@ -1,11 +1,16 @@
 # STutils
 
 [![Tests][badge-tests]][link-tests]
+[![Build][badge-build]][link-build]
 [![Documentation][badge-docs]][link-docs]
+[![PyPI](https://img.shields.io/pypi/v/StereoUtils.svg)](https://pypi.org/project/StereoUtils)
+[![Stars](https://img.shields.io/github/stars/ChanghaoGong/STutils?logo=GitHub)](https://github.com/ChanghaoGong/STutils/stargazers)
 
-[badge-tests]: https://img.shields.io/github/actions/workflow/status/ChanghaoGong/STutils/test.yaml?branch=main
+[badge-tests]: https://github.com/ChanghaoGong/STutils/actions/workflows/test.yaml/badge.svg
 [link-tests]: https://github.com/ChanghaoGong/STutils/actions/workflows/test.yml
-[badge-docs]: https://img.shields.io/readthedocs/STutils
+[badge-build]: https://github.com/ChanghaoGong/STutils/actions/workflows/build.yaml/badge.svg
+[link-build]: https://github.com/ChanghaoGong/STutils/actions/workflows/build.yml
+[badge-docs]: https://readthedocs.org/projects/stutils/badge/?version=latest
 
 scanpy extra function for STOmics
 
@@ -51,6 +56,6 @@ If you found a bug, please use the [issue tracker][issue-tracker].
 
 [scverse-discourse]: https://discourse.scverse.org/
 [issue-tracker]: https://github.com/ChanghaoGong/STutils/issues
-[changelog]: https://STutils.readthedocs.io/latest/changelog.html
-[link-docs]: https://STutils.readthedocs.io
-[link-api]: https://STutils.readthedocs.io/latest/api.html
+[changelog]: https://stutils.readthedocs.io/en/latest/changelog.html
+[link-docs]: https://stutils.readthedocs.io/en/latest/?badge=latest
+[link-api]: https://stutils.readthedocs.io/en/latest/api.html

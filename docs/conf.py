@@ -18,7 +18,7 @@ sys.path.insert(0, str(HERE / "extensions"))
 
 # NOTE: If you installed your project in editable mode, this might be stale.
 #       If this is the case, reinstall it to refresh the metadata
-info = metadata("STutils")
+info = metadata("StereoUtils")
 project_name = info["Name"]
 author = info["Author"]
 copyright = f"{datetime.now():%Y}, {author}."
@@ -36,10 +36,17 @@ needs_sphinx = "4.0"
 
 html_context = {
     "display_github": True,  # Integrate GitHub
+<<<<<<< HEAD
     "github_user": "ChanghaoGong",
     "github_repo": project_name,
     "github_version": "main",
     "conf_py_path": "/docs/",
+=======
+    "github_user": "ChanghaoGong",  # Username
+    "github_repo": "STutils",  # Repo name
+    "github_version": "main",  # Version
+    "conf_py_path": "/docs/",  # Path in the checkout to the docs root
+>>>>>>> 848853856621bd5336bba9f7fdc24cf7b110d798
 }
 
 # -- General configuration ---------------------------------------------------
@@ -65,7 +72,7 @@ extensions = [
 autosummary_generate = True
 autodoc_member_order = "groupwise"
 default_role = "literal"
-napoleon_google_docstring = False
+napoleon_google_docstring = True
 napoleon_numpy_docstring = True
 napoleon_include_init_with_doc = False
 napoleon_use_rtype = True  # having a separate entry generally helps readability
@@ -125,6 +132,7 @@ html_theme_options = {
 pygments_style = "default"
 
 nitpick_ignore = [
+    ("py:class", "type")
     # If building the documentation fails because of a missing link that is outside your control,
     # you can add an exception to this list.
     #     ("py:class", "igraph.Graph"),

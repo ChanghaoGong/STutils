@@ -3,8 +3,8 @@ build-backend = "hatchling.build"
 requires = [ "hatchling" ]
 
 [project]
-name = "STutils"
-version = "0.0.1"
+name = "StereoUtils"
+version = "0.0.2"
 description = "scanpy extra function for STOmics"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -23,9 +23,22 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-  "anndata",
-  # for debug logging (referenced from the issue template)
-  "session-info2",
+    "anndata",
+    "scanpy",
+    "matplotlib",
+    "seaborn",
+    "numpy",
+    "pandas",
+    "opencv-python",
+    "scikit-learn",
+    "typing",
+    "matplotlib_scalebar",
+    "squidpy",
+    "boltons",
+    "ctxcore",
+    "attrs",
+    "tqdm",
+    "session-info"
 ]
 optional-dependencies.dev = [
   "pre-commit",
