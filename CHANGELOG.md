@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning][].
 
 ### Added
 
+<<<<<<< ours
 -   pp.merge_big_cell
 -   tl.aucell
 -   tl.getDEG
@@ -17,3 +18,6 @@ and this project adheres to [Semantic Versioning][].
 -   pl.plot_cellbin_gradient
 -   pl.plot_cellbin_discrete
 -   pl.getDefaultColors
+=======
+- Basic tool, preprocessing and plotting functions
+>>>>>>> theirs

@@ -6,6 +6,7 @@ default_stages:
   - push
 minimum_pre_commit_version: 2.16.0
 repos:
+<<<<<<< ours
   - repo: https://github.com/psf/black
     rev: "23.11.0"
     hooks:
@@ -24,11 +25,25 @@ repos:
         # See https://github.com/scverse/cookiecutter-scverse/issues/143 and
         # https://github.com/jupyterlab/jupyterlab/issues/12675
         language_version: "17.9.1"
+=======
+  - repo: https://github.com/biomejs/pre-commit
+    rev: v1.9.4
+    hooks:
+      - id: biome-format
+        exclude: ^\.cruft\.json$ # inconsistent indentation with cruft - file never to be modified manually.
+  - repo: https://github.com/tox-dev/pyproject-fmt
+    rev: v2.5.1
+    hooks:
+      - id: pyproject-fmt
+>>>>>>> theirs
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.1.6
     hooks:
       - id: ruff
+        types_or: [python, pyi, jupyter]
         args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+        types_or: [python, pyi, jupyter]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:

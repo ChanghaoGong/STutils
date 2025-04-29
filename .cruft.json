@@ -1,7 +1,7 @@
 {
   "template": "https://github.com/scverse/cookiecutter-scverse",
-  "commit": "8e96abb5c3e2d5078c44713958da672711cf2a48",
-  "checkout": null,
+  "commit": "497afeaf179fe5c1144c4503046efa494586cc3d",
+  "checkout": "test4",
   "context": {
     "cookiecutter": {
       "project_name": "STutils",
@@ -10,10 +10,12 @@
       "author_full_name": "ChanghaoGong",
       "author_email": "gongchanghao@genomics.cn",
       "github_user": "ChanghaoGong",
-      "project_repo": "https://github.com/ChanghaoGong/STutils",
+      "github_repo": "STutils",
       "license": "MIT License",
+      "ide_integration": true,
       "_copy_without_render": [
-        ".github/workflows/**.yaml",
+        ".github/workflows/build.yaml",
+        ".github/workflows/test.yaml",
         "docs/_templates/autosummary/**.rst"
       ],
       "_render_devdocs": false,
@@ -21,7 +23,8 @@
         "lstrip_blocks": true,
         "trim_blocks": true
       },
-      "_template": "https://github.com/scverse/cookiecutter-scverse"
+      "_template": "https://github.com/scverse/cookiecutter-scverse",
+      "_commit": "497afeaf179fe5c1144c4503046efa494586cc3d"
     }
   },
   "directory": null
