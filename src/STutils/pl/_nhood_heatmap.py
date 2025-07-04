@@ -1,13 +1,17 @@
 """Plotting for nhood heatmap."""
+
 from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from anndata import AnnData
 from matplotlib.axes import Axes
+from typing import List, Dict, Optional
+from joblib import Parallel, delayed
 
-from STutils.tl import nhood_enrichment
+from STutils.tl import nhood_enrichment, test_nhood, summarise_nhood
 
 
 def nhood_heatmap(
@@ -59,3 +63,105 @@ def nhood_heatmap(
         outfig = f"{cluster_key}_nhood_heatmap.pdf"
         plt.savefig(outfig, dpi=300, format="pdf", bbox_inches="tight")
     return ax
+
+
+def plot_summary(
+    list_nhood: Dict[str, pd.DataFrame],
+    cell_types: List[str],
+    cell_type_column: str = "cell_type_tidy",
+    excluded_types: List[str] = ["excluded"],
+    n_jobs: int = 6,
+) -> pd.DataFrame:
+    """
+    汇总所有样本的邻域分析结果并准备绘图数据
+
+    参数:
+        list_nhood: 样本名到邻域分析结果的字典
+        cell_types: 包含所有细胞类型的列表
+        cell_type_column: 细胞类型列名
+        excluded_types: 要排除的细胞类型列表
+        n_jobs: 并行工作数
+
+    返回:
+        汇总后的DataFrame
+    """
+    # 并行处理所有样本
+    results = Parallel(n_jobs=n_jobs)(delayed(summarise_nhood)(sample_df) for sample, sample_df in list_nhood.items())
+
+    # 合并所有结果
+    nhood_summary = pd.concat(results)
+
+    # 汇总统计
+    summary_df = (
+        nhood_summary.groupby(["from_cell_type_figure", "to_cell_type_figure", "interaction_type"])["z_score"]
+        .agg(["mean", "count"])
+        .reset_index()
+    )
+
+    # 对每个细胞类型对保留最常见的相互作用类型
+    summary_df = summary_df.sort_values("count", ascending=False).drop_duplicates(
+        ["from_cell_type_figure", "to_cell_type_figure"]
+    )
+
+    # 创建完整的细胞类型组合网格
+    from_types = [ct for ct in cell_types if ct not in excluded_types]
+    to_types = [ct for ct in cell_types if ct not in excluded_types]
+
+    full_grid = pd.MultiIndex.from_product(
+        [from_types, to_types], names=["from_cell_type_figure", "to_cell_type_figure"]
+    ).to_frame(index=False)
+
+    # 合并完整网格与结果
+    nhood_summary = full_grid.merge(summary_df, on=["from_cell_type_figure", "to_cell_type_figure"], how="left")
+
+    # 计算样本百分比(假设总样本数为12)
+    nhood_summary["percent_samples"] = nhood_summary["count"] / 12
+
+    return nhood_summary
+
+
+def plot_interaction_heatmap(
+    summary_df: pd.DataFrame,
+    title: str = "Cell-Cell Interaction Summary",
+    figsize: tuple = (12, 10),
+    cmap: str = "coolwarm",
+    vmin: float = -2,
+    vmax: float = 2,
+    annot: bool = True,
+    fmt: str = ".2f",
+) -> None:
+    """
+    绘制细胞-细胞相互作用热图
+
+    参数:
+        summary_df: 来自plot_summary的结果DataFrame
+        title: 图标题
+        figsize: 图大小
+        cmap: 颜色映射
+        vmin: 颜色条最小值
+        vmax: 颜色条最大值
+        annot: 是否显示数值
+        fmt: 数值格式
+    """
+    # 创建数据透视表
+    pivot_df = summary_df.pivot(index="from_cell_type_figure", columns="to_cell_type_figure", values="mean")
+
+    # 绘制热图
+    plt.figure(figsize=figsize)
+    sns.heatmap(
+        pivot_df,
+        cmap=cmap,
+        vmin=vmin,
+        vmax=vmax,
+        annot=annot,
+        fmt=fmt,
+        center=0,
+        linewidths=0.5,
+        linecolor="lightgray",
+    )
+
+    plt.title(title)
+    plt.xlabel("To Cell Type")
+    plt.ylabel("From Cell Type")
+    plt.tight_layout()
+    plt.show()

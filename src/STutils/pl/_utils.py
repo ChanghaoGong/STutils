@@ -461,7 +461,6 @@ def getDefaultColors(n: int, type: Union[Literal[1], list] = 1) -> list:
             add_colors = []
             tmp = random.sample(range(step), 1)[0]
             for i in range(n - len(colors)):
-                print(i)
                 hextmp = f"{tmp:06X}"
                 add_colors.append("#" + hextmp)
                 tmp = tmp + step

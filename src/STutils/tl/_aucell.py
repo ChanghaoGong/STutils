@@ -217,6 +217,7 @@ def aucell(
     exp_mtx = adata.raw.X if use_raw else adata.X
     if issparse(exp_mtx):
         exp_mtx = exp_mtx.toarray()
+    exp_mtx = pd.DataFrame(exp_mtx, index=adata.obs_names, columns=adata.var_names)
     auc = aucell4r(
         create_rankings(exp_mtx, seed),
         signatures,
