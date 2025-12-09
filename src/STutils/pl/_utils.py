@@ -1,6 +1,6 @@
 import random
 from collections.abc import Mapping
-from typing import Literal, Union
+from typing import Literal
 
 import cv2
 import matplotlib
@@ -90,7 +90,7 @@ def crop_to_square_with_padding(im, edge_cut=300):
     return im_square
 
 
-def getDefaultColors(n: int, type: Union[Literal[1], list] = 1) -> list:
+def getDefaultColors(n: int, type: Literal[1] | list = 1) -> list:
     """A beautiful color series list for sci plotting!
 
     Args:
@@ -460,7 +460,7 @@ def getDefaultColors(n: int, type: Union[Literal[1], list] = 1) -> list:
             step = 16777200 // (n - len(colors)) - 2
             add_colors = []
             tmp = random.sample(range(step), 1)[0]
-            for i in range(n - len(colors)):
+            for _ in range(n - len(colors)):
                 hextmp = f"{tmp:06X}"
                 add_colors.append("#" + hextmp)
                 tmp = tmp + step

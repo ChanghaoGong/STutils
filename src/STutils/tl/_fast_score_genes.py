@@ -1,18 +1,16 @@
+import gc
+from collections.abc import Sequence
+from functools import partial
+
+import anndata as ad
 import numpy as np
 import pandas as pd
-import anndata as ad
 import pathos
-import gc
-from functools import partial
 from scipy.sparse import issparse
-from typing import Sequence, Optional
-from math import ceil
 
 
 def _sparse_nanmean(X, axis, dtype_use):
-    """
-    np.nanmean equivalent for sparse matrices
-    """
+    """np.nanmean equivalent for sparse matrices."""
     if not issparse(X):
         raise TypeError("X must be a sparse matrix")
 
@@ -43,10 +41,11 @@ def fast_sctl_score(
     ctrl_size: int = 50,
     n_bins: int = 25,
     float_type: str = "float64",
-    gene_pool: Optional[Sequence[str]] = None,
+    gene_pool: Sequence[str] | None = None,
 ):
     """
     Fast multi-core version of scanpy.tl.score_genes() function.
+
     The score is the average expression of a set of genes subtracted with the average expression of a reference set of genes.
     The reference gene set is randomly sampled from the gene_pool for each binned expression value.
 
@@ -92,8 +91,14 @@ def fast_sctl_score(
         raise ValueError("score_batch_size must be a positive integer.")
 
     # Check if n_cores_score is positive integer
-    if not isinstance(n_cores_score, int) or n_cores_score <= 0 or n_cores_score > pathos.multiprocessing.cpu_count():
-        raise ValueError("n_cores_score must be a positive integer and smaller than max cpu_count")
+    if (
+        not isinstance(n_cores_score, int)
+        or n_cores_score <= 0
+        or n_cores_score > pathos.multiprocessing.cpu_count()
+    ):
+        raise ValueError(
+            "n_cores_score must be a positive integer and smaller than max cpu_count"
+        )
 
     # select reference genes function
     def select_control_genes(pathway_genelist):
@@ -114,16 +119,24 @@ def fast_sctl_score(
 
     # score_core_function
     def calculate_score_for_pathway(pathway_key, dtype_use):
-        query_genes = np.where(all_gene.isin(pathway_dict_filtered_gene[pathway_key]))[0]
-        control_genes = select_control_genes(pathway_genelist=pathway_dict_filtered_gene[pathway_key])
+        query_genes = np.where(all_gene.isin(pathway_dict_filtered_gene[pathway_key]))[
+            0
+        ]
+        control_genes = select_control_genes(
+            pathway_genelist=pathway_dict_filtered_gene[pathway_key]
+        )
         control_genes = np.where(all_gene.isin(control_genes))[0]
 
         X_list = X_to_use_batch[:, query_genes]
         X_control = X_to_use_batch[:, control_genes]
 
         if sparse_or_not:
-            X_list = np.array(_sparse_nanmean(X_list, axis=1, dtype_use=dtype_use)).flatten()
-            X_control = np.array(_sparse_nanmean(X_control, axis=1, dtype_use=dtype_use)).flatten()
+            X_list = np.array(
+                _sparse_nanmean(X_list, axis=1, dtype_use=dtype_use)
+            ).flatten()
+            X_control = np.array(
+                _sparse_nanmean(X_control, axis=1, dtype_use=dtype_use)
+            ).flatten()
         else:
             X_list = np.nanmean(X_list, axis=1, dtype=dtype_use)
             X_control = np.nanmean(X_control, axis=1, dtype=dtype_use)
@@ -145,16 +158,22 @@ def fast_sctl_score(
 
     # calculating mean expression of all genes in gene_pool
     _adata = adata.copy()
-    _adata_subset = _adata[:, gene_pool] if len(gene_pool) < len(_adata.var_names) else _adata
+    _adata_subset = (
+        _adata[:, gene_pool] if len(gene_pool) < len(_adata.var_names) else _adata
+    )
     sparse_or_not = issparse(_adata_subset.X)
 
     if sparse_or_not:
         obs_avg = pd.Series(
-            np.array(_sparse_nanmean(_adata_subset.X, axis=0, dtype_use=float_type)).flatten(),
+            np.array(
+                _sparse_nanmean(_adata_subset.X, axis=0, dtype_use=float_type)
+            ).flatten(),
             index=gene_pool,
         )  # average expression of genes
     else:
-        obs_avg = pd.Series(np.nanmean(_adata_subset.X, axis=0), index=gene_pool)  # average expression of genes
+        obs_avg = pd.Series(
+            np.nanmean(_adata_subset.X, axis=0), index=gene_pool
+        )  # average expression of genes
 
     # expression bin of genes
     obs_avg = obs_avg[np.isfinite(obs_avg)]
@@ -171,8 +190,10 @@ def fast_sctl_score(
     if X_to_use.shape[0] % score_batch_size != 0:
         num_batches += 1
 
-    print("Calculating Score")
-    print(str(num_batches) + " batches need to score, with each max " + str(score_batch_size) + " cells")
+    print("Calculating score")
+    print(
+        f"{num_batches} batches need to score, with each max {score_batch_size} cells"
+    )
 
     keys = list(pathway_dict_filtered_gene.keys())
 
@@ -180,7 +201,7 @@ def fast_sctl_score(
     chunksize = max(1, len(keys) // (n_cores_score * 2))
 
     for i_batch in range(num_batches):
-        print("processing_batch_" + str((i_batch + 1)))
+        print(f"Processing batch {i_batch + 1}/{num_batches}")
         start = i_batch * score_batch_size
         end = min((i_batch + 1) * score_batch_size, X_to_use.shape[0])
 
@@ -195,8 +216,8 @@ def fast_sctl_score(
         del score_results, score_dataframe
         gc.collect()
 
-    print("score_done")
-    print("Outputing_dataframe")
+    print("Score calculation done")
+    print("Outputting dataframe")
     # output_score_df
     # score_df = pd.concat(final_score_list, axis=0, ignore_index=True)
     score_df.index = _adata_subset.obs.index

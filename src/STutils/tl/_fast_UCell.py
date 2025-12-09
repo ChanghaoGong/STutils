@@ -1,21 +1,28 @@
+import gc
+from collections.abc import Sequence
+from math import ceil
+
+import anndata as ad
 import numpy as np
 import pandas as pd
-import anndata as ad
-import scipy
 import pathos
-import gc
-from tqdm import tqdm
-from math import ceil
+import scipy
 from scipy.sparse import issparse
-from typing import Sequence
+from tqdm import tqdm
 
 # UCell:step 1 rank, step 2 score
 
 
 # UCell:step 1 rank
-def fast_ucell_rank(adata: ad.AnnData, n_cores_rank: int, maxRank: int = 1500, rank_batch_size: int = 100000):
+def fast_ucell_rank(
+    adata: ad.AnnData,
+    n_cores_rank: int,
+    maxRank: int = 1500,
+    rank_batch_size: int = 100000,
+):
     """
     Perform a fast UCell analysis on single-cell RNA-seq data. Step1 ranking.
+
     For each cell, rank gene expression(from count or lognormoalized data) from high to low.
     UCell algorithm: Andreatta, M., & Carmona, S. J. (2021). UCell: Robust and scalable single-cell gene signature scoring.
 
@@ -49,11 +56,14 @@ def fast_ucell_rank(adata: ad.AnnData, n_cores_rank: int, maxRank: int = 1500, r
         If maxRank is not a positive integer.
         If rank_batch_size is not a positive integer.
     """
-
     if not isinstance(adata, ad.AnnData):
         raise ValueError("adata must be a valid AnnData object.")
 
-    if not isinstance(n_cores_rank, int) or n_cores_rank <= 0 or n_cores_rank > pathos.multiprocessing.cpu_count():
+    if (
+        not isinstance(n_cores_rank, int)
+        or n_cores_rank <= 0
+        or n_cores_rank > pathos.multiprocessing.cpu_count()
+    ):
         raise ValueError("n_cores_rank must be a positive integer and <= max cpu_count")
 
     if not isinstance(maxRank, int) or maxRank <= 0:
@@ -79,10 +89,8 @@ def fast_ucell_rank(adata: ad.AnnData, n_cores_rank: int, maxRank: int = 1500, r
     # check the type of adata.X
     if issparse(adata.X):
         count = pd.DataFrame.sparse.from_spmatrix(adata.X)
-        print("adata.X is csr sparse matrix")
     else:
         count = adata.X.copy()
-        print("adata.X is numpy.ndarray")
 
     num_batches = len(count) // rank_batch_size
     if len(count) % rank_batch_size != 0:
@@ -92,14 +100,14 @@ def fast_ucell_rank(adata: ad.AnnData, n_cores_rank: int, maxRank: int = 1500, r
     num_chunks = n_cores_rank
     rank_chunk_size = ceil(rank_batch_size / num_chunks)
 
-    print("Step1 generate rank matrix")
-    print(str(num_batches) + " batches need to rank, with each max " + str(rank_batch_size) + " cells")
+    print("Step1: Generate rank matrix")
+    print(f"{num_batches} batches need to rank, with each max {rank_batch_size} cells")
     final_csr_matrix_list = []
 
     for i_batch in range(num_batches):
 
         # divide into batch
-        print("Processing_batch_" + str((i_batch + 1)))
+        print(f"Processing batch {i_batch + 1}/{num_batches}")
         start = i_batch * rank_batch_size
         end = min((i_batch + 1) * rank_batch_size, len(count))
         count_batch = count[start:end]
@@ -109,11 +117,15 @@ def fast_ucell_rank(adata: ad.AnnData, n_cores_rank: int, maxRank: int = 1500, r
         # multiprocessing
         with pathos.pools.ProcessPool(nodes=n_cores_rank) as pool:
             results = list(
-                tqdm(pool.imap(worker, range(num_chunks), chunksize=1), total=num_chunks, desc="Ranking Chunks")
+                tqdm(
+                    pool.imap(worker, range(num_chunks), chunksize=1),
+                    total=num_chunks,
+                    desc="Ranking Chunks",
+                )
             )
 
         # merge result from each chunk
-        csr_matrix_list = [result for result in results]
+        csr_matrix_list = list(results)
         csr_matrix_batch = scipy.sparse.vstack(csr_matrix_list)
         final_csr_matrix_list.append(csr_matrix_batch)
 
@@ -121,8 +133,12 @@ def fast_ucell_rank(adata: ad.AnnData, n_cores_rank: int, maxRank: int = 1500, r
     final_csr_matrix = scipy.sparse.vstack(final_csr_matrix_list)
 
     print("Rank done")
-    print("The output rank matrix can be used to calculate UCell score on different pathways set.")
-    print("The maxRank parameter use with this rank matrix in fast_ucell_score() must <= " + str(maxRank))
+    print(
+        "The output rank matrix can be used to calculate UCell score on different pathways set."
+    )
+    print(
+        f"The maxRank parameter used with this rank matrix in fast_ucell_score() must <= {maxRank}"
+    )
     return final_csr_matrix
 
 
@@ -137,6 +153,7 @@ def fast_ucell_score(
 ):
     """
     Perform a fast UCell analysis on single-cell RNA-seq data.
+
     UCell algorithm: Andreatta, M., & Carmona, S. J. (2021). UCell: Robust and scalable single-cell gene signature scoring.
 
     Parameters
@@ -156,6 +173,7 @@ def fast_ucell_score(
     score_batch_size : int, optional
         The batch size for scoring. Default is 100000.
         Will extract a batch of score_batch_size cells.The pathways are distributed across various cores, and calculations are performed on these cells.
+
     Returns
     -------
     A UCell score pandas dataframe with row index as cells and columns as pathways.
@@ -177,10 +195,18 @@ def fast_ucell_score(
         raise ValueError("rankmatrix must be scipy.sparse.csr_matrix.")
 
     if not len(cell_index) == rankmatrix.shape[0]:
-        raise ValueError("The length of cell_index must match the rows number of rankmatrix.")
+        raise ValueError(
+            "The length of cell_index must match the rows number of rankmatrix."
+        )
 
-    if not isinstance(n_cores_score, int) or n_cores_score <= 0 or n_cores_score > pathos.multiprocessing.cpu_count():
-        raise ValueError("n_cores_score must be a positive integer and smaller than max cpu_count.")
+    if (
+        not isinstance(n_cores_score, int)
+        or n_cores_score <= 0
+        or n_cores_score > pathos.multiprocessing.cpu_count()
+    ):
+        raise ValueError(
+            "n_cores_score must be a positive integer and smaller than max cpu_count."
+        )
 
     if not isinstance(input_dict, dict):
         raise ValueError("input_dict must be a dict.")
@@ -212,16 +238,17 @@ def fast_ucell_score(
         overmaxRank = length - subset_final_csr_matrix.getnnz(axis=1)
 
         final_result = np.array(subset_final_csr_matrix.sum(axis=1)).ravel()
-        final_result[special_index] = final_result[special_index] + (maxRank + 1) * overmaxRank[special_index]
+        final_result[special_index] = (
+            final_result[special_index] + (maxRank + 1) * overmaxRank[special_index]
+        )
         final_result[special_index] = 1 - (final_result[special_index] - num1) / num2
         final_result = pd.Series(final_result, name=key)
         return final_result
 
     print("Subset rank matrix by overlap genes in pathways")
-    # final_csr_matrix = rankmatrix.copy()
     final_csr_matrix = rankmatrix[:, input_dict["intersect_position"]]
 
-    print("Rank above maxRank to 0")
+    print("Set rank above maxRank to 0")
     final_csr_matrix.data[final_csr_matrix.data > maxRank] = 0
     final_csr_matrix.eliminate_zeros()
 
@@ -236,14 +263,16 @@ def fast_ucell_score(
     if final_csr_matrix.shape[0] % score_batch_size != 0:
         num_batches += 1
 
-    print("step2 calculating Score")
-    print(str(num_batches) + " batches need to score, with each max " + str(score_batch_size) + " cells")
+    print("Step2: Calculate UCell score")
+    print(
+        f"{num_batches} batches need to score, with each max {score_batch_size} cells"
+    )
 
     UCell_score_df = pd.DataFrame()
 
     for i_batch in range(num_batches):
         # divide into batch
-        print("processing_batch_" + str((i_batch + 1)))
+        print(f"Processing batch {i_batch + 1}/{num_batches}")
         start = i_batch * score_batch_size
         end = min((i_batch + 1) * score_batch_size, final_csr_matrix.shape[0])
         final_csr_matrix_batch = final_csr_matrix[start:end, :]
@@ -252,7 +281,9 @@ def fast_ucell_score(
         with pathos.pools.ProcessPool(nodes=n_cores_score) as pool:
             score_results = list(
                 tqdm(
-                    pool.imap(process_key, keys, chunksize=ceil(len(keys) / n_cores_score)),
+                    pool.imap(
+                        process_key, keys, chunksize=ceil(len(keys) / n_cores_score)
+                    ),
                     total=len(keys),
                     desc="Pathways",
                 )
@@ -260,13 +291,15 @@ def fast_ucell_score(
 
         # merge result for each batch
         Ucell_dataframe = pd.concat(score_results, axis=1)
-        UCell_score_df = pd.concat([UCell_score_df, Ucell_dataframe], axis=0, ignore_index=True)
+        UCell_score_df = pd.concat(
+            [UCell_score_df, Ucell_dataframe], axis=0, ignore_index=True
+        )
 
         del score_results, Ucell_dataframe
         gc.collect()
 
-    print("Ucell_done")
-    print("Outputing_dataframe")
+    print("UCell calculation done")
+    print("Outputting dataframe")
     # merge all result
     # UCell_score_df = pd.concat(final_score_list, axis=0, ignore_index=True)
     UCell_score_df.index = cell_index

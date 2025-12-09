@@ -1,11 +1,13 @@
-import scanpy as sc
-from anndata import AnnData
-import pandas as pd
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Literal
-from scanpy._utils import Empty, _empty
-from __future__ import annotations
+
 import anndata.utils
+import pandas as pd
+import scanpy as sc
+from anndata import AnnData
+from scanpy._utils import Empty, _empty
 
 
 def read_BGI_mtx(
@@ -31,7 +33,8 @@ def read_BGI_mtx(
         prefix (str | None, optional): _description_. Defaults to None.
         velocity (bool, optional): _description_. Defaults to False.
 
-    Returns:
+    Returns
+    -------
         AnnData: _description_
     """
     path = Path(path)
@@ -65,9 +68,7 @@ def _read_BGI_mtx(
     is_legacy: bool,
     velocity: bool,
 ) -> AnnData:
-    """
-    Read mex from output from Cell Ranger v2- or v3+
-    """
+    """Read mex from output from Cell Ranger v2- or v3+."""
     suffix = "" if is_legacy else ".gz"
     adata = sc.read(
         path / f"{prefix}matrix.mtx{suffix}",
@@ -76,12 +77,18 @@ def _read_BGI_mtx(
     ).T  # transpose the data
     if velocity:
         adata.layers["spliced"] = sc.read(
-            path.parent / "attachment" / "RNAvelocity_matrix" / f"{prefix}spliced.mtx{suffix}",
+            path.parent
+            / "attachment"
+            / "RNAvelocity_matrix"
+            / f"{prefix}spliced.mtx{suffix}",
             cache=cache,
             cache_compression=cache_compression,
         ).T.X
         adata.layers["unspliced"] = sc.read(
-            path.parent / "attachment" / "RNAvelocity_matrix" / f"{prefix}unspliced.mtx{suffix}",
+            path.parent
+            / "attachment"
+            / "RNAvelocity_matrix"
+            / f"{prefix}unspliced.mtx{suffix}",
             cache=cache,
             cache_compression=cache_compression,
         ).T.X

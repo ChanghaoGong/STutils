@@ -1,17 +1,14 @@
 """Plotting for nhood heatmap."""
 
-from typing import Optional
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from anndata import AnnData
-from matplotlib.axes import Axes
-from typing import List, Dict, Optional
 from joblib import Parallel, delayed
+from matplotlib.axes import Axes
 
-from STutils.tl import nhood_enrichment, test_nhood, summarise_nhood
+from STutils.tl import nhood_enrichment, summarise_nhood
 
 
 def nhood_heatmap(
@@ -20,7 +17,7 @@ def nhood_heatmap(
     library_key: str = "batch",
     radius: float = 30,
     cluster_key: str = "region",
-    ax: Optional[Axes] = None,
+    ax: Axes | None = None,
     figsize: tuple = (6, 5),
     cmap: str = "YlGn",
     save: bool = True,
@@ -28,30 +25,33 @@ def nhood_heatmap(
     """Plot neighborhood heatmap.
 
     Args:
-        adata (AnnData): anndata object
-        coord_type (str, optional): Type of coordinate system, defaults
-            to "generic"
-        library_key (str, optional): batch info, defaults to "batch"
-        radius (float, optional): Compute the graph based on
-            neighborhood radius, defaults to 30
-        cluster_key (str, optional): region or cell cluster key,
-            defaults to "region"
-        ax (Optional[Axes], optional): mpl axes, defaults to None
-        figsize (tuple, optional): fig size, defaults to (6, 5)
-        cmap (str, optional): colormap, defaults to "YlGn"
-        save (bool, optional): save or not, defaults to True
+        adata: anndata object
+        coord_type: Type of coordinate system, defaults to "generic"
+        library_key: batch info, defaults to "batch"
+        radius: Compute the graph based on neighborhood radius, defaults to 30
+        cluster_key: region or cell cluster key, defaults to "region"
+        ax: mpl axes, defaults to None
+        figsize: fig size, defaults to (6, 5)
+        cmap: colormap, defaults to "YlGn"
+        save: save or not, defaults to True
 
     Returns
     -------
         Axes: mpl axes
     """
     nhood_percents = nhood_enrichment(
-        adata, coord_type=coord_type, library_key=library_key, radius=radius, cluster_key=cluster_key
+        adata,
+        coord_type=coord_type,
+        library_key=library_key,
+        radius=radius,
+        cluster_key=cluster_key,
     )
     # Remove the numbers on the diagonal
     nhood_percents = nhood_percents.mask(np.eye(len(nhood_percents), dtype=bool))
     # the numbers on the diagonal equal to max value in the matrix
-    nhood_percents = nhood_percents.mask(np.eye(len(nhood_percents), dtype=bool), nhood_percents.max().max())
+    nhood_percents = nhood_percents.mask(
+        np.eye(len(nhood_percents), dtype=bool), nhood_percents.max().max()
+    )
     # zscore nhood_percents
     # nhood_percents = (nhood_percents - nhood_percents.mean()) / nhood_percents.std()
     if ax is None:
@@ -66,10 +66,10 @@ def nhood_heatmap(
 
 
 def plot_summary(
-    list_nhood: Dict[str, pd.DataFrame],
-    cell_types: List[str],
+    list_nhood: dict[str, pd.DataFrame],
+    cell_types: list[str],
     cell_type_column: str = "cell_type_tidy",
-    excluded_types: List[str] = ["excluded"],
+    excluded_types: list[str] | None = None,
     n_jobs: int = 6,
 ) -> pd.DataFrame:
     """
@@ -85,15 +85,21 @@ def plot_summary(
     返回:
         汇总后的DataFrame
     """
+    if excluded_types is None:
+        excluded_types = ["excluded"]
     # 并行处理所有样本
-    results = Parallel(n_jobs=n_jobs)(delayed(summarise_nhood)(sample_df) for sample, sample_df in list_nhood.items())
+    results = Parallel(n_jobs=n_jobs)(
+        delayed(summarise_nhood)(sample_df) for sample, sample_df in list_nhood.items()
+    )
 
     # 合并所有结果
     nhood_summary = pd.concat(results)
 
     # 汇总统计
     summary_df = (
-        nhood_summary.groupby(["from_cell_type_figure", "to_cell_type_figure", "interaction_type"])["z_score"]
+        nhood_summary.groupby(
+            ["from_cell_type_figure", "to_cell_type_figure", "interaction_type"]
+        )["z_score"]
         .agg(["mean", "count"])
         .reset_index()
     )
@@ -112,7 +118,9 @@ def plot_summary(
     ).to_frame(index=False)
 
     # 合并完整网格与结果
-    nhood_summary = full_grid.merge(summary_df, on=["from_cell_type_figure", "to_cell_type_figure"], how="left")
+    nhood_summary = full_grid.merge(
+        summary_df, on=["from_cell_type_figure", "to_cell_type_figure"], how="left"
+    )
 
     # 计算样本百分比(假设总样本数为12)
     nhood_summary["percent_samples"] = nhood_summary["count"] / 12
@@ -144,7 +152,9 @@ def plot_interaction_heatmap(
         fmt: 数值格式
     """
     # 创建数据透视表
-    pivot_df = summary_df.pivot(index="from_cell_type_figure", columns="to_cell_type_figure", values="mean")
+    pivot_df = summary_df.pivot(
+        index="from_cell_type_figure", columns="to_cell_type_figure", values="mean"
+    )
 
     # 绘制热图
     plt.figure(figsize=figsize)

@@ -4,7 +4,6 @@ from math import ceil
 from multiprocessing import Array, Process, cpu_count
 from multiprocessing.sharedctypes import RawArray
 from operator import attrgetter, mul
-from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -12,14 +11,14 @@ from anndata import AnnData
 from boltons.iterutils import chunked
 from ctxcore.genesig import GeneSignature
 from ctxcore.recovery import enrichment4cells
-from scipy.sparse import issparse, csr_matrix, csc_matrix, spmatrix
+from scipy.sparse import csr_matrix, issparse, spmatrix
 from tqdm import tqdm
 
 DTYPE = "uint32"
 DTYPE_C = c_uint32
 
 
-def create_rankings(ex_mtx: Union[pd.DataFrame, spmatrix], seed=None) -> pd.DataFrame:
+def create_rankings(ex_mtx: pd.DataFrame | spmatrix, seed=None) -> pd.DataFrame:
     """Create a whole genome rankings dataframe from a single cell expression profile dataframe.
 
     Args:
@@ -79,7 +78,7 @@ def create_rankings(ex_mtx: Union[pd.DataFrame, spmatrix], seed=None) -> pd.Data
                 # Calculate ranks: descending order (high expression = low rank)
                 # Use argsort with 'stable' method for tie-breaking (equivalent to 'first')
                 # This maintains the order of equal values, which is important for tie-breaking
-                sort_indices = np.argsort(-row_data_shuffled, kind='stable')
+                sort_indices = np.argsort(-row_data_shuffled, kind="stable")
 
                 # Assign ranks: 0-based (subtract 1 from 1-based rank)
                 ranks = np.zeros(n_genes, dtype=DTYPE)
@@ -136,7 +135,7 @@ def create_rankings(ex_mtx: Union[pd.DataFrame, spmatrix], seed=None) -> pd.Data
     )
 
 
-def derive_auc_threshold(ex_mtx: Union[pd.DataFrame, spmatrix]) -> pd.DataFrame:
+def derive_auc_threshold(ex_mtx: pd.DataFrame | spmatrix) -> pd.DataFrame:
     """Derive AUC thresholds for an expression matrix.
 
     It is important to check that most cells have a substantial fraction of expressed/detected genes in the calculation of
@@ -162,17 +161,23 @@ def derive_auc_threshold(ex_mtx: Union[pd.DataFrame, spmatrix]) -> pd.DataFrame:
     else:
         non_zero_counts = np.count_nonzero(ex_mtx, axis=1)
 
-    return pd.Series(non_zero_counts).quantile([0.01, 0.05, 0.10, 0.50, 1]) / ex_mtx.shape[1]
+    return (
+        pd.Series(non_zero_counts).quantile([0.01, 0.05, 0.10, 0.50, 1])
+        / ex_mtx.shape[1]
+    )
 
 
 enrichment = enrichment4cells
 
 
-def _enrichment(shared_ro_memory_array, modules, genes, cells, auc_threshold, auc_mtx, offset):
+def _enrichment(
+    shared_ro_memory_array, modules, genes, cells, auc_threshold, auc_mtx, offset
+):
     # The rankings dataframe is properly reconstructed (checked this).
     df_rnk = pd.DataFrame(
         data=np.frombuffer(shared_ro_memory_array, dtype=DTYPE).reshape(
-            len(cells), len(genes)),
+            len(cells), len(genes)
+        ),
         columns=genes,
         index=cells,
     )
@@ -180,9 +185,9 @@ def _enrichment(shared_ro_memory_array, modules, genes, cells, auc_threshold, au
     result_mtx = np.frombuffer(auc_mtx.get_obj(), dtype="d")
     inc = len(cells)
     for idx, module in enumerate(modules):
-        result_mtx[offset + (idx * inc): offset + ((idx + 1) * inc)] = enrichment4cells(
-            df_rnk, module, auc_threshold
-        ).values.ravel(order="C")
+        result_mtx[offset + (idx * inc) : offset + ((idx + 1) * inc)] = (
+            enrichment4cells(df_rnk, module, auc_threshold).values.ravel(order="C")
+        )
 
 
 def aucell4r(
@@ -269,10 +274,12 @@ def aucell4r(
         # Reconstitute the results array. Using C or row-major ordering.
         aucs = pd.DataFrame(
             data=np.ctypeslib.as_array(auc_mtx.get_obj()).reshape(
-                len(signatures), len(cells)),
+                len(signatures), len(cells)
+            ),
             columns=pd.Index(data=cells, name="Cell"),
             index=pd.Index(
-                data=list(map(attrgetter("name"), signatures)), name="Regulon"),
+                data=list(map(attrgetter("name"), signatures)), name="Regulon"
+            ),
         ).T
     return aucs / aucs.max(axis=0) if normalize else aucs
 
@@ -284,7 +291,7 @@ def aucell(
     noweights: bool = False,
     seed: int = 42,
     num_workers: int = cpu_count(),
-    use_raw: Optional[bool] = None,
+    use_raw: bool | None = None,
 ) -> list[str]:
     """Calculate enrichment of gene signatures for single cells.
 
@@ -327,8 +334,7 @@ def aucell(
         rankings.columns = adata.var_names
     else:
         # Dense matrix: convert to DataFrame as before
-        exp_mtx = pd.DataFrame(
-            exp_mtx, index=adata.obs_names, columns=adata.var_names)
+        exp_mtx = pd.DataFrame(exp_mtx, index=adata.obs_names, columns=adata.var_names)
         rankings = create_rankings(exp_mtx, seed)
 
     auc = aucell4r(

@@ -1,13 +1,13 @@
 import numpy as np
-from scipy.stats import gaussian_kde
 import scanpy as sc
+from scipy.stats import gaussian_kde
 
 
 def calculate_celltype_density(
     adata,
     celltype_of_interest,
     obs_key="celltype",
-    coord_keys=["x", "y"],
+    coord_keys: list[str] | None = None,
     scotts_factor_scale=10,
     density_colname=None,
     plot_result=True,
@@ -41,7 +41,6 @@ def calculate_celltype_density(
     adata : AnnData
         Updated AnnData object with density values added to obs.
     """
-
     # Set default column name for density if not provided
     if density_colname is None:
         density_colname = f"{celltype_of_interest.lower()}_density"
@@ -57,7 +56,9 @@ def calculate_celltype_density(
     if len(target_coords) > 0:
         # Compute Scott's factor and apply scaling
         scotts_factor = np.power(len(target_coords), -1 / (2 + 4))
-        kde = gaussian_kde(target_coords.T, bw_method=scotts_factor / scotts_factor_scale)
+        kde = gaussian_kde(
+            target_coords.T, bw_method=scotts_factor / scotts_factor_scale
+        )
 
         # Evaluate density at all points
         densities = kde(coords.T)
@@ -66,7 +67,9 @@ def calculate_celltype_density(
         densities = np.zeros(len(coords))
 
     # Normalize densities to 0-1 range
-    normalized_densities = (densities - densities.min()) / (densities.max() - densities.min() + 1e-10)
+    normalized_densities = (densities - densities.min()) / (
+        densities.max() - densities.min() + 1e-10
+    )
 
     # Add to adata.obs
     adata.obs[density_colname] = normalized_densities
@@ -94,7 +97,7 @@ def calculate_coculture_probability(
     celltype1,
     celltype2,
     obs_key="celltype",
-    coord_keys=["x", "y"],
+    coord_keys: list[str] | None = None,
     scotts_factor_scale=10,
     colname="coculture_probability",
     plot_result=True,
@@ -126,7 +129,8 @@ def calculate_coculture_probability(
     -------
     adata : Updated AnnData with co-occurrence probabilities.
     """
-
+    if coord_keys is None:
+        coord_keys = ["x", "y"]
     # Extract coordinates and cell types
     coords = adata.obs[coord_keys].values
     cell_types = adata.obs[obs_key].values
@@ -136,7 +140,9 @@ def calculate_coculture_probability(
         target_coords = coords[cell_types == target_celltype]
         if len(target_coords) > 0:
             scotts_factor = np.power(len(target_coords), -1 / (2 + 4))
-            kde = gaussian_kde(target_coords.T, bw_method=scotts_factor / scotts_factor_scale)
+            kde = gaussian_kde(
+                target_coords.T, bw_method=scotts_factor / scotts_factor_scale
+            )
             density = kde(coords.T)
             return (density - density.min()) / (density.max() - density.min() + 1e-10)
         else:

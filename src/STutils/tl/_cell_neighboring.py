@@ -1,12 +1,11 @@
+from functools import reduce
+
 import numpy as np
 import pandas as pd
 import squidpy as sq
 from anndata import AnnData
-from scipy import stats
-from sklearn.preprocessing import scale
-from functools import reduce
-from typing import List, Dict, Optional
 from joblib import Parallel, delayed
+from sklearn.preprocessing import scale
 
 
 def nhood_enrichment(
@@ -16,25 +15,26 @@ def nhood_enrichment(
     radius: float = 30,
     cluster_key: str = "region",
 ) -> pd.DataFrame:
-    """_summary_
+    """Calculate neighborhood enrichment.
 
     Args:
-        adata (AnnData): spatial anndata
-        coord_type (str, optional): Type of coordinate system., defaults
-            to "generic"
-        library_key (str, optional): batch info, defaults to "batch"
-        radius (float, optional): Compute the graph based on
-            neighborhood radius, defaults to 30
-        cluster_key (str, optional): region or cell cluster key,
-            defaults to "region"
+        adata: spatial anndata
+        coord_type: Type of coordinate system, defaults to "generic"
+        library_key: batch info, defaults to "batch"
+        radius: Compute the graph based on neighborhood radius, defaults to 30
+        cluster_key: region or cell cluster key, defaults to "region"
 
     Returns
     -------
         pd.DataFrame: a dataframe of neighborhood enrichment
     """
-    sq.gr.spatial_neighbors(adata, coord_type=coord_type, library_key=library_key, radius=radius)
+    sq.gr.spatial_neighbors(
+        adata, coord_type=coord_type, library_key=library_key, radius=radius
+    )
     sq.gr.nhood_enrichment(adata, cluster_key=cluster_key)
-    region_number = adata.obs[cluster_key].value_counts()[adata.obs[cluster_key].cat.categories]
+    region_number = adata.obs[cluster_key].value_counts()[
+        adata.obs[cluster_key].cat.categories
+    ]
     nhood_counts = pd.DataFrame(
         adata.uns[f"{cluster_key}_nhood_enrichment"]["count"],
         index=adata.obs[cluster_key].cat.categories,
@@ -52,15 +52,15 @@ def test_nhood(
     fraction_coherence: float = 0.8,
     iterations: int = 200,
     workers: int = 10,
-    excluded_types: List[str] = [],
-    sample_key: Optional[str] = None,
-    sample_id: Optional[str] = None,
+    excluded_types: list[str] | None = None,
+    sample_key: str | None = None,
+    sample_id: str | None = None,
 ) -> pd.DataFrame:
     """
     Analyze cell type neighborhood interactions with spatial shuffling test.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     adata : AnnData
         AnnData object containing single-cell data with spatial coordinates
     cell_type_column : str
@@ -82,18 +82,23 @@ def test_nhood(
     sample_id : Optional[str]
         Specific sample ID to analyze (required if sample_key is provided)
 
-    Returns:
-    --------
+    Returns
+    -------
     pd.DataFrame
         DataFrame with standardized observed and shuffled neighborhood interactions
     """
-
+    if excluded_types is None:
+        excluded_types = []
     # Validate inputs
     if cell_type_column not in adata.obs.columns:
-        raise ValueError(f"Cell type column '{cell_type_column}' not found in adata.obs")
+        raise ValueError(
+            f"Cell type column '{cell_type_column}' not found in adata.obs"
+        )
 
     if spatial_key not in adata.obsm:
-        raise ValueError(f"Spatial coordinates key '{spatial_key}' not found in adata.obsm")
+        raise ValueError(
+            f"Spatial coordinates key '{spatial_key}' not found in adata.obsm"
+        )
 
     if sample_key is not None:
         if sample_key not in adata.obs.columns:
@@ -101,7 +106,9 @@ def test_nhood(
         if sample_id is None:
             raise ValueError("sample_id must be provided when sample_key is specified")
         if sample_id not in adata.obs[sample_key].unique():
-            raise ValueError(f"Sample ID '{sample_id}' not found in column '{sample_key}'")
+            raise ValueError(
+                f"Sample ID '{sample_id}' not found in column '{sample_key}'"
+            )
 
     # Subset data if sample information is provided
     if sample_key is not None:
@@ -113,7 +120,9 @@ def test_nhood(
     # Observed part
     def calculate_observed(adata: AnnData) -> pd.DataFrame:
         # Compute neighborhood graph with squidpy
-        sq.gr.spatial_neighbors(adata, coord_type="generic", radius=radius, key_added="expansion_graph")
+        sq.gr.spatial_neighbors(
+            adata, coord_type="generic", radius=radius, key_added="expansion_graph"
+        )
 
         # Get adjacency matrix
         adj_matrix = adata.obsp["expansion_graph_connectivities"]
@@ -136,30 +145,42 @@ def test_nhood(
         drop_rows = (fraction_matrix > fraction_coherence).any(axis=1)
         nhood_norm_coherent = nhood_mat[~drop_rows].dropna()
         # Summarize interactions
-        print(cell_types)
-        nhood_sum = nhood_norm_coherent.groupby(f"from_{cell_type_column}")[cell_types].sum()
+        nhood_sum = nhood_norm_coherent.groupby(f"from_{cell_type_column}")[
+            cell_types
+        ].sum()
 
         # Normalize by row sums minus self-pairs
         nhood_row_sums = nhood_sum.sum(axis=1)
-        self_pair_counts = pd.Series({ct: nhood_sum.loc[ct, ct] for ct in nhood_sum.index})
+        self_pair_counts = pd.Series(
+            {ct: nhood_sum.loc[ct, ct] for ct in nhood_sum.index}
+        )
 
         nhood_norm = nhood_sum.div(nhood_row_sums - self_pair_counts, axis=0)
         nhood_norm = nhood_norm.reset_index().melt(
-            id_vars=f"from_{cell_type_column}", var_name=f"to_{cell_type_column}", value_name="obs_count"
+            id_vars=f"from_{cell_type_column}",
+            var_name=f"to_{cell_type_column}",
+            value_name="obs_count",
         )
 
         return nhood_norm
 
     # Shuffled part
-    def calculate_shuffled(adata: AnnData) -> List[pd.DataFrame]:
+    def calculate_shuffled(adata: AnnData) -> list[pd.DataFrame]:
         # 修改这里：将adata作为闭包变量捕获，而不是作为参数传递
         def single_shuffle(iter_num: int) -> pd.DataFrame:
             # 使用外部函数的adata参数
             adata_shuff = adata.copy()
-            adata_shuff.obs[cell_type_column] = np.random.permutation(adata_shuff.obs[cell_type_column].values)
+            adata_shuff.obs[cell_type_column] = np.random.permutation(
+                adata_shuff.obs[cell_type_column].values
+            )
 
             # 计算邻域图
-            sq.gr.spatial_neighbors(adata_shuff, coord_type="generic", radius=radius, key_added="expansion_graph")
+            sq.gr.spatial_neighbors(
+                adata_shuff,
+                coord_type="generic",
+                radius=radius,
+                key_added="expansion_graph",
+            )
 
             # 获取邻接矩阵
             adj_matrix = adata_shuff.obsp["expansion_graph_connectivities"]
@@ -175,7 +196,9 @@ def test_nhood(
                 for ct in counts.index:
                     nhood_mat.loc[cell, ct] = counts[ct]
 
-            nhood_mat[f"from_{cell_type_column}"] = adata_shuff.obs[cell_type_column].values
+            nhood_mat[f"from_{cell_type_column}"] = adata_shuff.obs[
+                cell_type_column
+            ].values
 
             # 过滤
             row_sums = nhood_mat[cell_types].sum(axis=1)
@@ -183,23 +206,32 @@ def test_nhood(
             drop_rows = (fraction_matrix > fraction_coherence).any(axis=1)
             nhood_norm_coherent = nhood_mat[~drop_rows].dropna()
             # 汇总
-            nhood_sum = nhood_norm_coherent.groupby(f"from_{cell_type_column}")[cell_types].sum()
+            nhood_sum = nhood_norm_coherent.groupby(f"from_{cell_type_column}")[
+                cell_types
+            ].sum()
 
             # 标准化
             nhood_row_sums = nhood_sum.sum(axis=1)
             self_pair_counts = pd.Series(
-                {ct: nhood_sum.loc[ct, ct] if ct in nhood_sum.index else 0 for ct in cell_types}
+                {
+                    ct: nhood_sum.loc[ct, ct] if ct in nhood_sum.index else 0
+                    for ct in cell_types
+                }
             )
 
             nhood_norm = nhood_sum.div(nhood_row_sums - self_pair_counts, axis=0)
             nhood_norm = nhood_norm.reset_index().melt(
-                id_vars=f"from_{cell_type_column}", var_name=f"to_{cell_type_column}", value_name=f"shuff_{iter_num}"
+                id_vars=f"from_{cell_type_column}",
+                var_name=f"to_{cell_type_column}",
+                value_name=f"shuff_{iter_num}",
             )
 
             return nhood_norm
 
         # Run in parallel
-        results = Parallel(n_jobs=workers)(delayed(single_shuffle)(i) for i in range(iterations))
+        results = Parallel(n_jobs=workers)(
+            delayed(single_shuffle)(i) for i in range(iterations)
+        )
         return results
 
     # Calculate observed and shuffled results
@@ -209,7 +241,10 @@ def test_nhood(
     # Merge all results
     nhood_norm_shuff = reduce(
         lambda left, right: pd.merge(
-            left, right, on=[f"from_{cell_type_column}", f"to_{cell_type_column}"], how="left"
+            left,
+            right,
+            on=[f"from_{cell_type_column}", f"to_{cell_type_column}"],
+            how="left",
         ),
         [nhood_norm_obs] + list_nhood_norm_shuff,
     )
@@ -256,7 +291,9 @@ def summarise_nhood(sample_df: pd.DataFrame) -> pd.DataFrame:
     # 判断相互作用类型和显著性
     tmp["interaction_type"] = np.where(tmp[obs_col] > 0, "attraction", "avoidance")
     tmp["p_value"] = np.where(
-        tmp[obs_col] > 0, 1 / (tmp["count_smaller"] + 1), 1 / (tmp["count_larger"] + 1)  # 加1避免除以0
+        tmp[obs_col] > 0,
+        1 / (tmp["count_smaller"] + 1),
+        1 / (tmp["count_larger"] + 1),  # 加1避免除以0
     )
     tmp["significant"] = tmp["p_value"] < 0.05
     tmp["pair"] = tmp["from_cell_type_figure"] + "_" + tmp["to_cell_type_figure"]

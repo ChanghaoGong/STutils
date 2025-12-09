@@ -1,7 +1,6 @@
-import pandas as pd
 import anndata as ad
 import numpy as np
-from typing import Dict, List
+import pandas as pd
 
 
 def map_genes_to_positions(gene_dict, gene_array):
@@ -23,17 +22,19 @@ def map_genes_to_positions(gene_dict, gene_array):
 
 
 def filter_dict_by_intersection(
-    input_dict: Dict[str, List[str]], target_list: List[str], min_gene_num: int
-) -> Dict[str, List[str]]:
+    input_dict: dict[str, list[str]], target_list: list[str], min_gene_num: int
+) -> dict[str, list[str]]:
     """
     Filter a dictionary of pathways based on the minimum overlap with a target gene list.
 
-    Parameters:
+    Parameters
+    ----------
         input_dict (dict): A dictionary where keys are pathway names and values are lists of genes.
         target_list (list): A list of target genes to compare against pathway genes.
         min_gene_num (int): The minimum number of overlapping genes required to keep a pathway.
 
-    Returns:
+    Returns
+    -------
         dict: A filtered dictionary containing pathways with sufficient overlap with the target gene list.
     """
     filtered_dict = {}
@@ -51,9 +52,12 @@ def filter_dict_by_intersection(
 
 
 # function_for_pathway_input_for_scoring
-def generate_pathway_input(adata: ad.AnnData, pathway_dict: Dict[str, List[str]], min_overlap_gene: int = 3) -> dict:
+def generate_pathway_input(
+    adata: ad.AnnData, pathway_dict: dict[str, list[str]], min_overlap_gene: int = 3
+) -> dict:
     """
     Generate pathway input data for fast_ucell or fast_sctl_score analysis.
+
     Parameters
     ----------
     adata : ad.AnnData
@@ -62,6 +66,7 @@ def generate_pathway_input(adata: ad.AnnData, pathway_dict: Dict[str, List[str]]
         A dictionary where keys are pathway names and values are lists of genes.
     min_overlap_gene : int, optional
         The minimum overlap of genes required to include a pathway. Default is 3.
+
     Returns
     -------
     dict
@@ -85,11 +90,15 @@ def generate_pathway_input(adata: ad.AnnData, pathway_dict: Dict[str, List[str]]
     )
 
     # Step2: Record the number of genes in the original pathways (useful for fast_ucell)
-    pathway_dict_length = {key: len(value) for key, value in pathway_dict_filtered.items()}
+    pathway_dict_length = {
+        key: len(value) for key, value in pathway_dict_filtered.items()
+    }
 
     # Step3: Flatten the pathway dictionary and Remove duplicate genes
     pathway_genes = [
-        item for value in pathway_dict_filtered.values() for item in (value if isinstance(value, list) else [value])
+        item
+        for value in pathway_dict_filtered.values()
+        for item in (value if isinstance(value, list) else [value])
     ]
     pathway_genes = np.array(list(set(pathway_genes)), dtype="object")
 
@@ -98,11 +107,16 @@ def generate_pathway_input(adata: ad.AnnData, pathway_dict: Dict[str, List[str]]
 
     # Step5: Create a dictionary for each pathway with only genes that intersect with 'adata.var_names' (for fast_sctl_score)
     pathway_df_filtered = pd.DataFrame(
-        [(k, gene) for k, v in pathway_dict_filtered.items() for gene in v], columns=["pathway", "gene"]
+        [(k, gene) for k, v in pathway_dict_filtered.items() for gene in v],
+        columns=["pathway", "gene"],
     )
-    pathway_df_filtered = pathway_df_filtered.loc[pathway_df_filtered["gene"].isin(pathway_genes)]
+    pathway_df_filtered = pathway_df_filtered.loc[
+        pathway_df_filtered["gene"].isin(pathway_genes)
+    ]
     filtered_gene_dict = (
-        pathway_df_filtered.groupby("pathway")["gene"].apply(list)[pathway_dict_filtered.keys()].to_dict()
+        pathway_df_filtered.groupby("pathway")["gene"]
+        .apply(list)[pathway_dict_filtered.keys()]
+        .to_dict()
     )
 
     # Step6: Find the positions of intersecting genes in 'adata.X' and sort them from left to right
@@ -110,7 +124,9 @@ def generate_pathway_input(adata: ad.AnnData, pathway_dict: Dict[str, List[str]]
     pathway_genes = np.array(adata.var_names[pathway_genes_position])
 
     # Step7: Convert genes in the intersecting gene dictionary to their sorted index in 'pathway_genes'
-    filtered_gene_dict_position = map_genes_to_positions(filtered_gene_dict, pathway_genes)
+    filtered_gene_dict_position = map_genes_to_positions(
+        filtered_gene_dict, pathway_genes
+    )
 
     # Step7: Output a dict for result
     result_dict = {
@@ -121,9 +137,11 @@ def generate_pathway_input(adata: ad.AnnData, pathway_dict: Dict[str, List[str]]
         "intersect_position": pathway_genes_position,
     }
 
-    print(str(len(pathway_dict_filtered.keys())) + " pathways passed QC")
+    n_pathways = len(pathway_dict_filtered.keys())
+    max_pathway_length = max(result_dict["pathway_dict_length"].values())
+    print(f"{n_pathways} pathways passed QC")
     print(
-        "The maxRank must >= " + str(max(result_dict["pathway_dict_length"].values())),
-        "(The genes number of the longest pathway)",
+        f"The maxRank must >= {max_pathway_length} "
+        "(The genes number of the longest pathway)"
     )
     return result_dict
