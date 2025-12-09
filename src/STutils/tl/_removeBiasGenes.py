@@ -3,14 +3,18 @@ from anndata import AnnData
 
 
 def removeBiasGenes(adata: AnnData) -> AnnData:
-    """Remove unused genes for human singcle cell analysis
+    """Remove bias genes for human single cell analysis.
+
+    This function removes common bias genes that are typically not informative
+    for downstream analysis, including mitochondrial genes, ribosomal proteins,
+    hemoglobin genes, and various non-coding RNAs.
 
     Args:
-        adata (AnnData): Anndata object
+        adata: Annotated data object containing gene expression data.
 
     Returns
     -------
-        AnnData: filtered anndata
+        A new AnnData object with bias genes removed. The original object is not modified.
     """
     malat1 = adata.var_names.str.startswith("MALAT1")
     MTgenes = adata.var_names.str.startswith("MT-")
@@ -24,7 +28,18 @@ def removeBiasGenes(adata: AnnData) -> AnnData:
     LINCgenes = adata.var_names.str.contains("^LINC[0-9]")
     ALgenes = adata.var_names.str.contains("^AL") & adata.var_names.str.contains(".")
     remove_genes = (
-        malat1 | MTgenes | hb_genes | RPgenes | RPgenes2 | CTCgenes | MIRgenes | ACgenes | CTgenes | LINCgenes | ALgenes
+        malat1
+        | MTgenes
+        | hb_genes
+        | RPgenes
+        | RPgenes2
+        | CTCgenes
+        | MIRgenes
+        | ACgenes
+        | CTgenes
+        | LINCgenes
+        | ALgenes
     )
     keep = np.invert(remove_genes)
-    adata = adata[:, keep]
+    adata_filtered = adata[:, keep]
+    return adata_filtered
