@@ -1,6 +1,5 @@
 import json
 import os
-import pandas as pd
 
 
 def read_signature(file_path):
@@ -28,7 +27,7 @@ def read_signature(file_path):
     if ext == ".json":
         # 读取JSON格式
         try:
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 data = json.load(f)
 
             # 检查JSON结构是否符合预期
@@ -44,11 +43,11 @@ def read_signature(file_path):
                 raise ValueError("JSON格式不符合预期，应为字典或包含签名信息的列表")
 
         except json.JSONDecodeError as e:
-            raise ValueError(f"JSON解析错误: {e}")
+            raise ValueError(f"JSON解析错误: {e}") from e
 
     elif ext == ".gmt":
         # 读取GMT格式
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -59,7 +58,8 @@ def read_signature(file_path):
                     continue  # 跳过不完整的行
 
                 signature_name = parts[0]
-                description = parts[1]  # GMT格式中第二个字段通常是描述，可忽略
+                # GMT格式中第二个字段通常是描述，可忽略
+                _ = parts[1]
                 genes = [gene for gene in parts[2:] if gene]  # 过滤空基因名
 
                 signature_dict[signature_name] = genes
