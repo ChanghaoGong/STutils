@@ -25,6 +25,35 @@ classifiers = [
 dependencies = [
   "anndata",
   "scanpy",
+  # Core scientific computing
+  "numpy",
+  "pandas",
+  "scipy",
+  # Visualization
+  "matplotlib",
+  "seaborn",
+  "matplotlib-scalebar",
+  # Image processing
+  "opencv-python",
+  # Machine learning
+  "scikit-learn",
+  "joblib",
+  # Progress bars
+  "tqdm",
+  # Multiprocessing
+  "pathos",
+  # Spatial analysis
+  "squidpy",
+  # Pathway analysis
+  "boltons",
+  "ctxcore",
+  # Spatial data I/O
+  "geopandas",
+  "shapely",
+  "spatialdata",
+  "spatialdata-io",
+  "dask-image",
+  "h5py",
   # for debug logging (referenced from the issue template)
   "session-info2",
 ]
