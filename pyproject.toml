@@ -42,8 +42,6 @@ dependencies = [
   "tqdm",
   # Multiprocessing
   "pathos",
-  # Spatial analysis
-  "squidpy",
   # Pathway analysis
   "boltons",
   "ctxcore",

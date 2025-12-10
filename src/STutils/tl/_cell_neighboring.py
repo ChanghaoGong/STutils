@@ -1,11 +1,239 @@
 from functools import reduce
+from itertools import chain
 
 import numpy as np
 import pandas as pd
-import squidpy as sq
 from anndata import AnnData
 from joblib import Parallel, delayed
+from pandas import CategoricalDtype
+from pandas.api.types import infer_dtype
+from scipy.sparse import block_diag, csr_matrix
+from scipy.spatial import Delaunay
+from sklearn.metrics.pairwise import euclidean_distances
+from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import scale
+
+
+def _assert_categorical_obs(adata: AnnData, key: str) -> None:
+    """Assert that a key in adata.obs is categorical."""
+    if key not in adata.obs:
+        raise KeyError(f"Cluster key `{key}` not found in `adata.obs`.")
+    if not isinstance(adata.obs[key].dtype, CategoricalDtype):
+        raise TypeError(
+            f"Expected `adata.obs[{key!r}]` to be `categorical`, found `{infer_dtype(adata.obs[key])}`."
+        )
+
+
+def _assert_spatial_basis(adata: AnnData, key: str) -> None:
+    """Assert that spatial coordinates exist in adata.obsm."""
+    if key not in adata.obsm:
+        raise KeyError(f"Spatial basis `{key}` not found in `adata.obsm`.")
+
+
+def _build_connectivity(
+    coords: np.ndarray,
+    n_neighs: int = 6,
+    radius: float | None = None,
+    delaunay: bool = False,
+    set_diag: bool = False,
+    return_distance: bool = False,
+) -> csr_matrix | tuple[csr_matrix, csr_matrix]:
+    """Build connectivity graph from spatial coordinates.
+
+    Simplified version of squidpy.gr._build._build_connectivity.
+    """
+    N = coords.shape[0]
+    if delaunay:
+        tri = Delaunay(coords)
+        indptr, indices = tri.vertex_neighbor_vertices
+        Adj = csr_matrix(
+            (np.ones_like(indices, dtype=np.float64), indices, indptr), shape=(N, N)
+        )
+
+        if return_distance:
+            dists = np.array(
+                list(
+                    chain(
+                        *(
+                            euclidean_distances(
+                                coords[indices[indptr[i] : indptr[i + 1]], :],
+                                coords[np.newaxis, i, :],
+                            )
+                            for i in range(N)
+                            if len(indices[indptr[i] : indptr[i + 1]])
+                        )
+                    )
+                )
+            ).squeeze()
+            Dst = csr_matrix((dists, indices, indptr), shape=(N, N))
+    else:
+        r = 1 if radius is None else radius
+        tree = NearestNeighbors(n_neighbors=n_neighs, radius=r, metric="euclidean")
+        tree.fit(coords)
+
+        if radius is None:
+            dists, col_indices = tree.kneighbors()
+            dists, col_indices = dists.reshape(-1), col_indices.reshape(-1)
+            row_indices = np.repeat(np.arange(N), n_neighs)
+        else:
+            dists, col_indices = tree.radius_neighbors()
+            row_indices = np.repeat(np.arange(N), [len(x) for x in col_indices])
+            dists = np.concatenate(dists)
+            col_indices = np.concatenate(col_indices)
+
+        Adj = csr_matrix(
+            (np.ones_like(row_indices, dtype=np.float64), (row_indices, col_indices)),
+            shape=(N, N),
+        )
+        if return_distance:
+            Dst = csr_matrix((dists, (row_indices, col_indices)), shape=(N, N))
+
+    Adj.setdiag(1.0 if set_diag else Adj.diagonal())
+    if return_distance:
+        Dst.setdiag(0.0)
+        Adj.eliminate_zeros()
+        Dst.eliminate_zeros()
+        return Adj, Dst
+
+    Adj.eliminate_zeros()
+    return Adj
+
+
+def _spatial_neighbors_simplified(
+    adata: AnnData,
+    spatial_key: str = "spatial",
+    coord_type: str = "generic",
+    library_key: str | None = None,
+    radius: float | None = None,
+    key_added: str = "spatial",
+) -> None:
+    """Simplified version of squidpy.gr.spatial_neighbors.
+
+    Only supports coord_type="generic" with radius parameter.
+    """
+    _assert_spatial_basis(adata, spatial_key)
+
+    if library_key is not None:
+        _assert_categorical_obs(adata, key=library_key)
+        libs = adata.obs[library_key].cat.categories
+        mats: list[tuple[csr_matrix, csr_matrix]] = []
+        ixs: list[int] = []
+        for lib in libs:
+            ixs.extend(np.where(adata.obs[library_key] == lib)[0])
+            adata_subset = adata[adata.obs[library_key] == lib]
+            Adj, Dst = _build_connectivity(
+                adata_subset.obsm[spatial_key],
+                n_neighs=6,
+                radius=radius,
+                delaunay=False,
+                return_distance=True,
+                set_diag=False,
+            )
+            mats.append((Adj, Dst))
+        ixs = np.argsort(ixs).tolist()
+        Adj = block_diag([m[0] for m in mats], format="csr")[ixs, :][:, ixs]
+        Dst = block_diag([m[1] for m in mats], format="csr")[ixs, :][:, ixs]
+    else:
+        Adj, Dst = _build_connectivity(
+            adata.obsm[spatial_key],
+            n_neighs=6,
+            radius=radius,
+            delaunay=False,
+            return_distance=True,
+            set_diag=False,
+        )
+
+    conns_key = f"{key_added}_connectivities"
+    dists_key = f"{key_added}_distances"
+    adata.obsp[conns_key] = Adj
+    adata.obsp[dists_key] = Dst
+
+
+def _count_nhood_enrichment(
+    adj: csr_matrix, clustering: np.ndarray, n_cls: int
+) -> np.ndarray:
+    """Count neighborhood enrichment without numba.
+
+    Simplified pure Python version.
+    """
+    res = np.zeros((adj.shape[0], n_cls), dtype=np.uint32)
+    for i in range(adj.shape[0]):
+        xs, xe = adj.indptr[i], adj.indptr[i + 1]
+        cols = adj.indices[xs:xe]
+        for c in cols:
+            res[i, clustering[c]] += 1
+
+    # Aggregate by cluster
+    count_matrix = np.zeros((n_cls, n_cls), dtype=np.uint32)
+    for row in range(res.shape[0]):
+        cl = clustering[row]
+        count_matrix[cl, :] += res[row, :]
+
+    return count_matrix
+
+
+def _nhood_enrichment_simplified(
+    adata: AnnData,
+    cluster_key: str,
+    library_key: str | None = None,
+    connectivity_key: str | None = None,
+    n_perms: int = 1000,
+    seed: int | None = None,
+) -> None:
+    """Simplified version of squidpy.gr.nhood_enrichment.
+
+    Uses pure Python implementation instead of numba.
+    """
+    if connectivity_key is None:
+        connectivity_key = "spatial_connectivities"
+    else:
+        connectivity_key = f"{connectivity_key}_connectivities"
+
+    if connectivity_key not in adata.obsp:
+        raise KeyError(
+            f"Spatial connectivity key `{connectivity_key}` not found in `adata.obsp`. "
+            f"Please run `spatial_neighbors` first."
+        )
+
+    _assert_categorical_obs(adata, cluster_key)
+    adj = adata.obsp[connectivity_key]
+    original_clust = adata.obs[cluster_key]
+    clust_map = {v: i for i, v in enumerate(original_clust.cat.categories.values)}
+    int_clust = np.array([clust_map[c] for c in original_clust], dtype=np.uint32)
+
+    if library_key is not None:
+        _assert_categorical_obs(adata, key=library_key)
+        libraries: pd.Series | None = adata.obs[library_key]
+    else:
+        libraries = None
+
+    n_cls = len(clust_map)
+    count = _count_nhood_enrichment(adj, int_clust, n_cls)
+
+    # Permutation test
+    rs = np.random.RandomState(seed)
+    perms = np.empty((n_perms, n_cls, n_cls), dtype=np.float64)
+    int_clust_copy = int_clust.copy()
+
+    for i in range(n_perms):
+        if libraries is not None:
+            # Shuffle within each library
+            int_clust_shuff = int_clust_copy.copy()
+            for c in libraries.cat.categories:
+                idx = np.where(libraries == c)[0]
+                arr_group = int_clust_shuff[idx].copy()
+                rs.shuffle(arr_group)
+                int_clust_shuff[idx] = arr_group
+            int_clust_perm = int_clust_shuff
+        else:
+            int_clust_perm = int_clust_copy.copy()
+            rs.shuffle(int_clust_perm)
+
+        perms[i, ...] = _count_nhood_enrichment(adj, int_clust_perm, n_cls)
+
+    zscore = (count - perms.mean(axis=0)) / (perms.std(axis=0) + 1e-10)
+
+    adata.uns[f"{cluster_key}_nhood_enrichment"] = {"zscore": zscore, "count": count}
 
 
 def nhood_enrichment(
@@ -28,10 +256,12 @@ def nhood_enrichment(
     -------
         pd.DataFrame: a dataframe of neighborhood enrichment
     """
-    sq.gr.spatial_neighbors(
+    _spatial_neighbors_simplified(
         adata, coord_type=coord_type, library_key=library_key, radius=radius
     )
-    sq.gr.nhood_enrichment(adata, cluster_key=cluster_key)
+    _nhood_enrichment_simplified(
+        adata, cluster_key=cluster_key, library_key=library_key
+    )
     region_number = adata.obs[cluster_key].value_counts()[
         adata.obs[cluster_key].cat.categories
     ]
@@ -119,8 +349,8 @@ def test_nhood(
 
     # Observed part
     def calculate_observed(adata: AnnData) -> pd.DataFrame:
-        # Compute neighborhood graph with squidpy
-        sq.gr.spatial_neighbors(
+        # Compute neighborhood graph
+        _spatial_neighbors_simplified(
             adata, coord_type="generic", radius=radius, key_added="expansion_graph"
         )
 
@@ -175,7 +405,7 @@ def test_nhood(
             )
 
             # 计算邻域图
-            sq.gr.spatial_neighbors(
+            _spatial_neighbors_simplified(
                 adata_shuff,
                 coord_type="generic",
                 radius=radius,
