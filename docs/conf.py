@@ -96,6 +96,8 @@ intersphinx_mapping = {
     "anndata": ("https://anndata.readthedocs.io/en/stable/", None),
     "scanpy": ("https://scanpy.readthedocs.io/en/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
+    "pandas": ("https://pandas.pydata.org/docs/", None),
 }
 
 # List of patterns, relative to source directory, that match files and
@@ -127,5 +129,13 @@ pygments_style = "default"
 nitpick_ignore = [
     # If building the documentation fails because of a missing link that is outside your control,
     # you can add an exception to this list.
-    #     ("py:class", "igraph.Graph"),
+    # Matplotlib internal classes
+    ("py:class", "matplotlib.axes._axes.Axes"),
+    # Pandas internal classes
+    ("py:class", "pandas.core.frame.DataFrame"),
+    # ctxcore classes (no intersphinx available)
+    ("py:class", "ctxcore.genesig.GeneSignature"),
+    # STutils functions that don't exist yet
+    ("py:func", "STutils.pp.basic_preproc"),
 ]
+
