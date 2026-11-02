@@ -138,4 +138,3 @@ nitpick_ignore = [
     # STutils functions that don't exist yet
     ("py:func", "STutils.pp.basic_preproc"),
 ]
-
